@@ -11,11 +11,11 @@ class SyntheticTree:
         for e in self._tree.edges:
             self._tree[e[0]][e[1]]['weight'] = np.random.rand()
             self._tree[e[0]][e[1]]['N'] = 0
-            self._tree[e[0]][e[1]]['Q'] = 0
+            self._tree[e[0]][e[1]]['Q'] = 0.
 
         for n in self._tree.nodes:
             self._tree.nodes[n]['N'] = 0
-            self._tree.nodes[n]['V'] = 0
+            self._tree.nodes[n]['V'] = 0.
 
         self.leaves = [x for x in self._tree.nodes() if
             self._tree.out_degree(x) == 0 and self._tree.in_degree(x) == 1]

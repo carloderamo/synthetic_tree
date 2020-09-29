@@ -40,6 +40,7 @@ class MCTS:
         if next_state not in tree_env.leaves:
             return [[state, next_state]] + self._navigate(tree_env)
         else:
+            tree_env.tree.nodes[next_state]['N'] += 1
             return [[state, next_state]]
 
     def _select(self, tree_env):
