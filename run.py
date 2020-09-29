@@ -22,9 +22,9 @@ def experiment():
 n_exp = 5
 n_trees = 5
 n_simulations = 10000
-exploration_coeff = 0.1
-k = 100
-d = 1
+exploration_coeff = 0.5
+k = 8
+d = 4
 
 out = Parallel(n_jobs=-1)(delayed(experiment)() for _ in range(n_exp))
 v_hat = np.array([o[0]]for o in out)
@@ -32,4 +32,6 @@ diff = np.array([o[1] for o in out])
 
 avg_diff = diff.mean(0).mean(0)
 plt.plot(avg_diff)
+err = 2 * np.std(diff.reshape(n_exp * n_trees, n_simulations)) / np.sqrt(n_exp * n_trees)
+plt.fill_between(np.arange(n_simulations), avg_diff - err, avg_diff + err, alpha=.5)
 plt.show()
