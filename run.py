@@ -24,11 +24,11 @@ def experiment():
 n_exp = 5
 n_trees = 5
 n_simulations = 10000
-exploration_coeff = .01
+exploration_coeff = .1
 k = 100
 d = 1
 tau = .01
-algorithm = 'ments'
+algorithm = 'uct'
 
 out = Parallel(n_jobs=-1)(delayed(experiment)() for _ in range(n_exp))
 v_hat = np.array([o[0]] for o in out)
