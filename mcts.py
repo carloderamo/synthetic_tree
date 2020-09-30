@@ -35,6 +35,15 @@ class MCTS:
                 qs = np.array(
                     [tree_env.tree[e[0]][e[1]]['Q'] for e in out_edges])
                 current_node['V'] = self._tau * logsumexp(qs / self._tau)
+            elif self._algorithm == 'rents':
+                out_edges = [e for e in tree_env.tree.edges(e[0])]
+                qs = np.array(
+                    [tree_env.tree[e[0]][e[1]]['Q'] for e in out_edges])
+                visitation_ratio = np.array(
+                    [tree_env.tree[e[0]][e[1]]['N'] / tree_env.tree.nodes[e[0]][
+                        'N'] for e in out_edges]
+                )
+                current_node['V'] = self._tau * np.log(np.sum(visitation_ratio * np.exp(qs / self._tau)))
             else:
                 raise ValueError
 
@@ -71,6 +80,17 @@ class MCTS:
                 np.sum(n_state_action) + 1)
             q_exp_tau = np.exp(qs / self._tau)
             probs = (1 - lambda_coeff) * q_exp_tau / q_exp_tau.sum() + lambda_coeff / n_actions
+
+            return np.random.choice(np.arange(n_actions), p=probs)
+        elif self._algorithm == 'rents':
+            n_actions = len(out_edges)
+            lambda_coeff = self._exploration_coeff * n_actions / np.log(
+                np.sum(n_state_action) + 1)
+            q_exp_tau = np.exp(qs / self._tau)
+            visitation_ratio = np.array(
+                [tree_env.tree[e[0]][e[1]]['N'] / tree_env.tree.nodes[e[0]]['N'] for e in out_edges]
+            )
+            probs = (1 - lambda_coeff) * visitation_ratio * q_exp_tau / q_exp_tau.sum() + lambda_coeff / n_actions
 
             return np.random.choice(np.arange(n_actions), p=probs)
         else:

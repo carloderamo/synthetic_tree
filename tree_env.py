@@ -14,11 +14,11 @@ class SyntheticTree:
         self._tree = nx.balanced_tree(k, d, create_using=nx.DiGraph)
         for e in self._tree.edges:
             self._tree[e[0]][e[1]]['weight'] = np.random.rand()
-            self._tree[e[0]][e[1]]['N'] = 0
+            self._tree[e[0]][e[1]]['N'] = 1
             self._tree[e[0]][e[1]]['Q'] = 0.
 
         for n in self._tree.nodes:
-            self._tree.nodes[n]['N'] = 0
+            self._tree.nodes[n]['N'] = 1
             self._tree.nodes[n]['V'] = 0.
 
         self.leaves = [x for x in self._tree.nodes() if
@@ -58,7 +58,7 @@ class SyntheticTree:
         return self._tree
 
     def _solver(self, node=0):
-        if self._algorithm == 'uct':
+        if self._algorithm == 'uct' or self._algorithm == 'rents':
             max_mean = 0.
             for leaf in self.leaves:
                 max_mean = max(self._tree.nodes[leaf]['mean'], max_mean)
