@@ -12,8 +12,9 @@ class SyntheticTree:
         self._tau = tau
 
         self._tree = nx.balanced_tree(k, d, create_using=nx.DiGraph)
-        for e in self._tree.edges:
-            self._tree[e[0]][e[1]]['weight'] = np.random.rand()
+        random_weights = np.random.rand(len(self._tree.edges))
+        for i, e in enumerate(self._tree.edges):
+            self._tree[e[0]][e[1]]['weight'] = random_weights[i]
             self._tree[e[0]][e[1]]['N'] = 1
             self._tree[e[0]][e[1]]['Q'] = 0.
 
@@ -23,13 +24,8 @@ class SyntheticTree:
 
         self.leaves = [x for x in self._tree.nodes() if
                        self._tree.out_degree(x) == 0 and self._tree.in_degree(x) == 1]
-        for leaf in self.leaves:
-            mean = 0.
-            for path in nx.all_simple_edge_paths(self._tree, 0, leaf):
-                for edge in path:
-                    mean += self._tree[edge[0]][edge[1]]['weight']
-            self._tree.nodes[leaf]['mean'] = mean
 
+        self._compute_mean()
         self.optimal_v_root = self._solver()
 
         self.state = None
@@ -56,6 +52,14 @@ class SyntheticTree:
     @property
     def tree(self):
         return self._tree
+
+    def _compute_mean(self, node=0, weight=0):
+        if node not in self.leaves:
+            for e in self._tree.edges(node):
+                self._compute_mean(e[1],
+                                   weight + self._tree[e[0]][e[1]]['weight'])
+        else:
+            self._tree.nodes[node]['mean'] = weight
 
     def _solver(self, node=0):
         if self._algorithm == 'uct' or self._algorithm == 'rents':
