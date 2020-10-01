@@ -62,7 +62,7 @@ class SyntheticTree:
             self._tree.nodes[node]['mean'] = weight
 
     def _solver(self, node=0):
-        if self._algorithm == 'uct' or self._algorithm == 'rents':
+        if self._algorithm == 'uct':
             max_mean = 0.
             for leaf in self.leaves:
                 max_mean = max(self._tree.nodes[leaf]['mean'], max_mean)
@@ -78,5 +78,16 @@ class SyntheticTree:
                 return self._tau * logsumexp(
                     [self._solver(n) / self._tau for n in self._tree.successors(node)]
                 )
+        elif self._algorithm == 'rents':
+            successors = [n for n in self._tree.successors(node)]
+            if successors[0] in self.leaves:
+                v = np.array([self._tree.nodes[n]['V'] for n in successors])
+                max_idx = np.argmax(v)
+
+                return self._tau * np.exp(v[max_idx] / self._tau) / np.sum(np.exp(v / self._tau))
+            else:
+                exp_v = np.array([np.exp(self._solver(n) / self._tau) for n in self._tree.successors(node)])
+
+                return self._tau * exp_v.max() / exp_v.sum()
         else:
             raise ValueError

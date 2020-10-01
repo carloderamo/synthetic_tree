@@ -24,9 +24,9 @@ def experiment():
 n_exp = 5
 n_trees = 5
 n_simulations = 10000
-exploration_coeff = .4
-k = 8
-d = 4
+exploration_coeff = .1
+k = 100
+d = 1
 tau = .01
 algorithm = 'rents'
 
