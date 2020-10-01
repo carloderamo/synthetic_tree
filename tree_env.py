@@ -15,11 +15,11 @@ class SyntheticTree:
         random_weights = np.random.rand(len(self._tree.edges))
         for i, e in enumerate(self._tree.edges):
             self._tree[e[0]][e[1]]['weight'] = random_weights[i]
-            self._tree[e[0]][e[1]]['N'] = 1
+            self._tree[e[0]][e[1]]['N'] = 0
             self._tree[e[0]][e[1]]['Q'] = 0.
 
         for n in self._tree.nodes:
-            self._tree.nodes[n]['N'] = 1
+            self._tree.nodes[n]['N'] = 0
             self._tree.nodes[n]['V'] = 0.
 
         self.leaves = [x for x in self._tree.nodes() if
