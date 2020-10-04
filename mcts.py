@@ -85,6 +85,7 @@ class MCTS:
                 np.sum(n_state_action) + 1 + 1e-10), 0, 1)
             q_exp_tau = np.exp(qs / self._tau)
             probs = (1 - lambda_coeff) * q_exp_tau / q_exp_tau.sum() + lambda_coeff / n_actions
+            probs[np.random.randint(len(probs))] += 1 - probs.sum()
 
             return np.random.choice(np.arange(n_actions), p=probs)
         elif self._algorithm == 'rents':
