@@ -73,26 +73,36 @@ class SyntheticTree:
                 max_mean = max(self._tree.nodes[leaf]['mean'], max_mean)
 
             return max_mean
-        elif self._algorithm == 'ments':
-            successors = [n for n in self._tree.successors(node)]
-            if successors[0] in self.leaves:
-                return self._tau * logsumexp(
-                    [self._tree.nodes[x]['mean'] / self._tau for x in self._tree.successors(node)]
-                )
-            else:
-                return self._tau * logsumexp(
-                    [self._solver(n) / self._tau for n in self._tree.successors(node)]
-                )
-        elif self._algorithm == 'rents':
-            successors = [n for n in self._tree.successors(node)]
-            if successors[0] in self.leaves:
-                v = np.array([self._tree.nodes[n]['V'] for n in successors])
-                max_idx = np.argmax(v)
-
-                return self._tau * np.exp(v[max_idx] / self._tau) / np.sum(np.exp(v / self._tau))
-            else:
-                exp_v = np.array([np.exp(self._solver(n) / self._tau) for n in self._tree.successors(node)])
-
-                return self._tau * exp_v.max() / exp_v.sum()
         else:
-            raise ValueError
+            successors = [n for n in self._tree.successors(node)]
+            if self._algorithm == 'ments':
+                if successors[0] in self.leaves:
+                    return self._tau * logsumexp(
+                        [self._tree.nodes[x]['mean'] / self._tau for x in self._tree.successors(node)]
+                    )
+                else:
+                    return self._tau * logsumexp(
+                        [self._solver(n) / self._tau for n in self._tree.successors(node)]
+                    )
+            elif self._algorithm == 'rents':
+                if successors[0] in self.leaves:
+                    v = np.array([self._tree.nodes[n]['V'] for n in successors])
+                    max_idx = np.argmax(v)
+
+                    return self._tau * np.exp(v[max_idx] / self._tau) / np.sum(np.exp(v / self._tau))
+                else:
+                    exp_v = np.array([np.exp(self._solver(n) / self._tau) for n in self._tree.successors(node)])
+
+                    return self._tau * exp_v.max() / exp_v.sum()
+            elif self._algorithm == 'tents':
+                if successors[0] in self.leaves:
+                    v = np.array([self._tree.nodes[n]['V'] for n in successors])
+                    max_idx = np.argmax(v)
+
+                    return self._tau * np.exp(v[max_idx] / self._tau) / np.sum(np.exp(v / self._tau))
+                else:
+                    exp_v = np.array([np.exp(self._solver(n) / self._tau) for n in self._tree.successors(node)])
+
+                    return self._tau * exp_v.max() / exp_v.sum()
+            else:
+                raise ValueError
