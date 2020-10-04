@@ -46,11 +46,17 @@ class MCTS:
                     )
                     current_node['V'] = self._tau * np.log(np.sum(visitation_ratio * np.exp(qs / self._tau)))
                 elif self._algorithm == 'tents':
+                    q_exp_tau = np.exp(qs / self._tau)
                     sorted_q = np.sort(qs)
-                    kappa = np.array(1 + i * q for i, q in enumerate(sorted_q))
-                    kappa = np.argwhere(kappa > qs.sum()).ravel()
+                    kappa = list()
+                    for i, q in enumerate(reversed(sorted_q)):
+                        if 1 + (i + 1) * sorted_q[i] > sorted_q[:i + 1].sum():
+                            idx = np.argwhere(qs == sorted_q[i]).ravel()[0]
+                            qs[idx] = np.nan
+                            kappa.append(idx)
+                    kappa = np.array(kappa)
 
-                    sparse_max = qs ** 2 / 2 - (np.array([qs[i] for i in kappa]) - 1) ** 2 / (2 * len(kappa) ** 2)
+                    sparse_max = q_exp_tau / 2 - (np.array([q_exp_tau[i] for i in kappa]) - 1) ** 2 / (2 * len(kappa) ** 2)
                     sparse_max = sparse_max.sum() + .5
                     current_node['V'] = self._tau * sparse_max
                 else:
@@ -106,14 +112,18 @@ class MCTS:
                 return np.random.choice(np.arange(n_actions), p=probs)
             elif self._algorithm == 'tents':
                 sorted_q = np.sort(qs)
-                kappa = np.array(1 + i * q for i, q in enumerate(sorted_q))
-                kappa = kappa[kappa > qs.sum()]
+                kappa = list()
+                for i, q in enumerate(reversed(sorted_q)):
+                    if 1 + (i + 1) * sorted_q[i] > sorted_q[:i + 1].sum():
+                        idx = np.argwhere(qs == sorted_q[i]).ravel()[0]
+                        qs[idx] = np.nan
+                        kappa.append(idx)
+                kappa = np.array(kappa)
 
                 q_exp_tau = q_exp_tau[kappa]
                 max_omega = np.maximum(q_exp_tau - (q_exp_tau - 1).sum() / len(kappa),
                                        np.zeros(len(kappa)))
                 probs = (1 - lambda_coeff) * max_omega + lambda_coeff / n_actions
-                # probs[np.random.randint(len(probs))] += 1 - probs.sum()
             else:
                 raise ValueError
 
