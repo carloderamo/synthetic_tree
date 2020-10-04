@@ -27,7 +27,7 @@ class SyntheticTree:
 
         self._compute_mean()
         means = np.array([self._tree.nodes[n]['mean'] for n in self.leaves])
-        means = (means - means.min()) / (means.max() - means.min())
+        means = (means - means.min()) / (means.max() - means.min()) if len(means) > 1 else [0.]
         for i, n in enumerate(self.leaves):
             self._tree.nodes[n]['mean'] = means[i]
 
