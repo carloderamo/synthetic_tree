@@ -6,7 +6,7 @@ from mcts import MCTS
 from tree_env import SyntheticTree
 
 
-def experiment():
+def experiment(algorithm):
     mcts = MCTS(exploration_coeff=exploration_coeff,
                 algorithm=algorithm,
                 tau=tau)
@@ -28,16 +28,19 @@ exploration_coeff = .1
 k = 100
 d = 1
 tau = .01
-algorithm = 'uct'
+algorithms = {'uct': 'UCT', 'ments': 'MENTS'}
 
-out = Parallel(n_jobs=-1)(delayed(experiment)() for _ in range(n_exp))
-v_hat = np.array([o[0]] for o in out)
-diff = np.array([o[1] for o in out])
+for alg in algorithms.keys():
+    out = Parallel(n_jobs=-1)(delayed(experiment)(alg) for _ in range(n_exp))
+    v_hat = np.array([o[0]] for o in out)
+    diff = np.array([o[1] for o in out])
 
-avg_diff = diff.mean(0).mean(0)
-plt.plot(avg_diff)
-err = 2 * np.std(diff.reshape(n_exp * n_trees, n_simulations),
-                 axis=0) / np.sqrt(n_exp * n_trees)
-plt.fill_between(np.arange(n_simulations), avg_diff - err, avg_diff + err,
-                 alpha=.5)
+    avg_diff = diff.mean(0).mean(0)
+    plt.plot(avg_diff)
+    err = 2 * np.std(diff.reshape(n_exp * n_trees, n_simulations),
+                     axis=0) / np.sqrt(n_exp * n_trees)
+    plt.fill_between(np.arange(n_simulations), avg_diff - err, avg_diff + err,
+                     alpha=.5)
+plt.legend(algorithms.values())
+plt.grid()
 plt.show()
