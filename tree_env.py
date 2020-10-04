@@ -26,6 +26,11 @@ class SyntheticTree:
                        self._tree.out_degree(x) == 0 and self._tree.in_degree(x) == 1]
 
         self._compute_mean()
+        means = np.array([self._tree.nodes[n]['mean'] for n in self.leaves])
+        means = (means - means.min()) / (means.max() - means.min())
+        for i, n in enumerate(self.leaves):
+            self._tree.nodes[n]['mean'] = means[i]
+
         self.optimal_v_root = self._solver()
 
         self.state = None

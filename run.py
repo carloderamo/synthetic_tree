@@ -28,7 +28,7 @@ exploration_coeff = .1
 k = 100
 d = 1
 tau = .01
-algorithm = 'rents'
+algorithm = 'uct'
 
 out = Parallel(n_jobs=-1)(delayed(experiment)() for _ in range(n_exp))
 v_hat = np.array([o[0]] for o in out)
