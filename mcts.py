@@ -56,7 +56,7 @@ class MCTS:
                             kappa.append(idx)
                     kappa = np.array(kappa)
 
-                    sparse_max = q_exp_tau ** 2 / 2 - (np.array([q_exp_tau[i] for i in kappa]) - 1) ** 2 / (2 * len(kappa) ** 2)
+                    sparse_max = q_exp_tau ** 2 / 2 - (np.array([q_exp_tau[i] for i in kappa]).sum() - 1) ** 2 / (2 * len(kappa) ** 2)
                     sparse_max = sparse_max.sum() + .5
                     current_node['V'] = self._tau * sparse_max
                 else:
