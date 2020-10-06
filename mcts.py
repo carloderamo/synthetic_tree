@@ -95,9 +95,9 @@ class MCTS:
             n_actions = len(out_edges)
             lambda_coeff = np.clip(self._exploration_coeff * n_actions / np.log(
                 np.sum(n_state_action) + 1 + 1e-10), 0, 1)
-            q_exp_tau = np.exp(qs / self._tau)
 
             if self._algorithm == 'ments':
+                q_exp_tau = np.exp(qs / self._tau)
                 probs = (1 - lambda_coeff) * q_exp_tau / q_exp_tau.sum() + lambda_coeff / n_actions
                 probs[np.random.randint(len(probs))] += 1 - probs.sum()
 
@@ -106,11 +106,14 @@ class MCTS:
                 visitation_ratio = np.array(
                     [tree_env.tree[e[0]][e[1]]['N'] / (tree_env.tree.nodes[e[0]]['N'] + 1e-10) for e in out_edges]
                 )
+                q_exp_tau = np.exp(qs / self._tau)
                 probs = (1 - lambda_coeff) * visitation_ratio * q_exp_tau / q_exp_tau.sum() + lambda_coeff / n_actions
                 probs[np.random.randint(len(probs))] += 1 - probs.sum()
 
                 return np.random.choice(np.arange(n_actions), p=probs)
             elif self._algorithm == 'tents':
+                q_tau = qs / self._tau
+
                 sorted_q = np.sort(qs)
                 kappa = list()
                 for i, q in enumerate(reversed(sorted_q)):
@@ -120,8 +123,7 @@ class MCTS:
                         kappa.append(idx)
                 kappa = np.array(kappa)
 
-                q_exp_tau = q_exp_tau[kappa]
-                max_omega = np.maximum(q_exp_tau - (q_exp_tau - 1).sum() / len(kappa),
+                max_omega = np.maximum(q_tau - (q_tau[kappa].sum() - 1) / len(kappa),
                                        np.zeros(len(kappa)))
                 probs = (1 - lambda_coeff) * max_omega + lambda_coeff / n_actions
             else:
