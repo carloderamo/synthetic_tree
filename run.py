@@ -16,7 +16,10 @@ def experiment(algorithm):
     for i in range(n_trees):
         tree = SyntheticTree(k, d, algorithm, tau)
         v_hat[i] = mcts.run(tree, n_simulations)
-        diff[i] = np.abs(v_hat[i] - tree.optimal_v_root)
+        if algorithm != 'rents':
+            diff[i] = np.abs(v_hat[i] - tree.optimal_v_root)
+        else:
+            diff[i] = np.abs(v_hat[i] - tree.optimal_v_root[i])
 
     return v_hat, diff
 

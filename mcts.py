@@ -13,6 +13,12 @@ class MCTS:
         for i in range(n_simulations):
             tree_env.reset()
             v_hat[i] = self._simulation(tree_env)
+            if self._algorithm == 'rents':
+                weights = np.array([tree_env.tree[e[0]][e[1]]['N'] for e in tree_env.tree.edges(0)])
+                vis_ratio = weights / weights.sum()
+                tree_env.optimal_v_root.append(
+                    self._tau * np.log(np.sum(vis_ratio * tree_env.pre_weight_optimal))
+                )
 
         return v_hat
 
@@ -46,17 +52,18 @@ class MCTS:
                     )
                     current_node['V'] = self._tau * np.log(np.sum(visitation_ratio * np.exp(qs / self._tau)))
                 elif self._algorithm == 'tents':
-                    q_exp_tau = np.exp(qs / self._tau)
-                    sorted_q = np.sort(qs)
+                    q_tau = qs / self._tau
+
+                    sorted_q = np.flip(np.sort(qs))
                     kappa = list()
-                    for i, q in enumerate(reversed(sorted_q)):
-                        if 1 + (i + 1) * sorted_q[i] > sorted_q[:i + 1].sum():
-                            idx = np.argwhere(qs == sorted_q[i]).ravel()[0]
+                    for i in range(1, len(sorted_q) + 1):
+                        if 1 + i * sorted_q[i-1] > sorted_q[:i].sum():
+                            idx = np.argwhere(qs == sorted_q[i-1]).ravel()[0]
                             qs[idx] = np.nan
                             kappa.append(idx)
                     kappa = np.array(kappa)
 
-                    sparse_max = q_exp_tau ** 2 / 2 - (np.array([q_exp_tau[i] for i in kappa]).sum() - 1) ** 2 / (2 * len(kappa) ** 2)
+                    sparse_max = q_tau ** 2 / 2 - (np.array([q_tau[i] for i in kappa]).sum() - 1) ** 2 / (2 * len(kappa) ** 2)
                     sparse_max = sparse_max.sum() + .5
                     current_node['V'] = self._tau * sparse_max
                 else:
@@ -114,11 +121,11 @@ class MCTS:
             elif self._algorithm == 'tents':
                 q_tau = qs / self._tau
 
-                sorted_q = np.sort(qs)
+                sorted_q = np.flip(np.sort(qs))
                 kappa = list()
-                for i, q in enumerate(reversed(sorted_q)):
-                    if 1 + (i + 1) * sorted_q[i] > sorted_q[:i + 1].sum():
-                        idx = np.argwhere(qs == sorted_q[i]).ravel()[0]
+                for i in range(1, len(sorted_q) + 1):
+                    if 1 + i * sorted_q[i-1] > sorted_q[:i].sum():
+                        idx = np.argwhere(qs == sorted_q[i-1]).ravel()[0]
                         qs[idx] = np.nan
                         kappa.append(idx)
                 kappa = np.array(kappa)
@@ -129,4 +136,5 @@ class MCTS:
             else:
                 raise ValueError
 
+            print(probs.sum(), max_omega)
             return np.random.choice(np.arange(n_actions), p=probs)

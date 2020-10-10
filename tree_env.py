@@ -31,7 +31,11 @@ class SyntheticTree:
         for i, n in enumerate(self.leaves):
             self._tree.nodes[n]['mean'] = means[i]
 
-        self.optimal_v_root = self._solver()
+        if self._algorithm != 'rents':
+            self.optimal_v_root = self._solver()
+        else:
+            self.optimal_v_root = list()
+            self.pre_weight_optimal = self._solver()
 
         self.state = None
 
@@ -86,23 +90,36 @@ class SyntheticTree:
                     )
             elif self._algorithm == 'rents':
                 if successors[0] in self.leaves:
-                    v = np.array([self._tree.nodes[n]['V'] for n in successors])
-                    max_idx = np.argmax(v)
-
-                    return self._tau * np.exp(v[max_idx] / self._tau) / np.sum(np.exp(v / self._tau))
+                    return np.exp([self._tree.nodes[x]['mean'] / self._tau for x in self._tree.successors(node)])
                 else:
-                    exp_v = np.array([np.exp(self._solver(n) / self._tau) for n in self._tree.successors(node)])
-
-                    return self._tau * exp_v.max() / exp_v.sum()
+                    return np.exp([self._solver(n) / self._tau for n in self._tree.successors(node)])
             elif self._algorithm == 'tents':
+                def sparse_max(means):
+                    means_tau = means / self._tau
+
+                    sorted_means = np.flip(np.sort(means))
+                    kappa = list()
+                    for i in range(1, len(sorted_means) + 1):
+                        if 1 + i * sorted_means[i-1] > sorted_means[:i].sum():
+                            idx = np.argwhere(means == sorted_means[i-1]).ravel()[0]
+                            means[idx] = np.nan
+                            kappa.append(idx)
+                    kappa = np.array(kappa)
+
+                    sparse_max = means_tau ** 2 / 2 - (np.array(
+                        [means_tau[i] for i in kappa]).sum() - 1) ** 2 / (
+                                         2 * len(kappa) ** 2)
+                    sparse_max = sparse_max.sum() + .5
+
+                    return self._tau * sparse_max
+
                 if successors[0] in self.leaves:
-                    v = np.array([self._tree.nodes[n]['V'] for n in successors])
-                    max_idx = np.argmax(v)
-
-                    return self._tau * np.exp(v[max_idx] / self._tau) / np.sum(np.exp(v / self._tau))
+                    return sparse_max(np.array(
+                        [self._tree.nodes[x]['mean'] for x in self._tree.successors(node)])
+                    )
                 else:
-                    exp_v = np.array([np.exp(self._solver(n) / self._tau) for n in self._tree.successors(node)])
-
-                    return self._tau * exp_v.max() / exp_v.sum()
+                    return sparse_max(np.array(
+                        [self._solver(x) for x in self._tree.successors(node)])
+                    )
             else:
                 raise ValueError
