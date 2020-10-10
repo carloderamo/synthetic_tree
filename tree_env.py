@@ -94,15 +94,14 @@ class SyntheticTree:
                 else:
                     return np.exp([self._solver(n) / self._tau for n in self._tree.successors(node)])
             elif self._algorithm == 'tents':
-                def sparse_max(means):
-                    means_tau = means / self._tau
-
-                    sorted_means = np.flip(np.sort(means))
+                def sparse_max(means_tau):
+                    temp_means_tau = means_tau.copy()
+                    sorted_means = np.flip(np.sort(temp_means_tau))
                     kappa = list()
                     for i in range(1, len(sorted_means) + 1):
                         if 1 + i * sorted_means[i-1] > sorted_means[:i].sum():
-                            idx = np.argwhere(means == sorted_means[i-1]).ravel()[0]
-                            means[idx] = np.nan
+                            idx = np.argwhere(temp_means_tau == sorted_means[i-1]).ravel()[0]
+                            temp_means_tau[idx] = np.nan
                             kappa.append(idx)
                     kappa = np.array(kappa)
 
@@ -110,15 +109,14 @@ class SyntheticTree:
                             means_tau[kappa].sum() - 1) ** 2 / (2 * len(kappa) ** 2)
                     sparse_max = sparse_max.sum() + .5
 
-                    return self._tau * sparse_max
+                    return sparse_max
 
                 if successors[0] in self.leaves:
-                    return sparse_max(np.array(
-                        [self._tree.nodes[x]['mean'] for x in self._tree.successors(node)])
-                    )
+                    means = np.array([self._tree.nodes[x]['mean'] for x in self._tree.successors(node)])
+                    return self._tau * sparse_max(means / self._tau)
                 else:
-                    return sparse_max(np.array(
-                        [self._solver(x) for x in self._tree.successors(node)])
+                    return self._tau * sparse_max(np.array(
+                        [self._solver(x) / self._tau for x in self._tree.successors(node)])
                     )
             else:
                 raise ValueError

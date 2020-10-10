@@ -53,13 +53,14 @@ class MCTS:
                     current_node['V'] = self._tau * np.log(np.sum(visitation_ratio * np.exp(qs / self._tau)))
                 elif self._algorithm == 'tents':
                     q_tau = qs / self._tau
+                    temp_q_tau = q_tau.copy()
 
-                    sorted_q = np.flip(np.sort(qs))
+                    sorted_q = np.flip(np.sort(temp_q_tau))
                     kappa = list()
                     for i in range(1, len(sorted_q) + 1):
                         if 1 + i * sorted_q[i-1] > sorted_q[:i].sum():
-                            idx = np.argwhere(qs == sorted_q[i-1]).ravel()[0]
-                            qs[idx] = np.nan
+                            idx = np.argwhere(temp_q_tau == sorted_q[i-1]).ravel()[0]
+                            temp_q_tau[idx] = np.nan
                             kappa.append(idx)
                     kappa = np.array(kappa)
 
@@ -120,13 +121,14 @@ class MCTS:
                 return np.random.choice(np.arange(n_actions), p=probs)
             elif self._algorithm == 'tents':
                 q_tau = qs / self._tau
+                temp_q_tau = q_tau.copy()
 
-                sorted_q = np.flip(np.sort(qs))
+                sorted_q = np.flip(np.sort(temp_q_tau))
                 kappa = list()
                 for i in range(1, len(sorted_q) + 1):
                     if 1 + i * sorted_q[i-1] > sorted_q[:i].sum():
-                        idx = np.argwhere(qs == sorted_q[i-1]).ravel()[0]
-                        qs[idx] = np.nan
+                        idx = np.argwhere(temp_q_tau == sorted_q[i-1]).ravel()[0]
+                        temp_q_tau[idx] = np.nan
                         kappa.append(idx)
                 kappa = np.array(kappa)
 
