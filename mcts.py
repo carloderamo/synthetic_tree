@@ -63,7 +63,7 @@ class MCTS:
                             kappa.append(idx)
                     kappa = np.array(kappa)
 
-                    sparse_max = q_tau ** 2 / 2 - (np.array([q_tau[i] for i in kappa]).sum() - 1) ** 2 / (2 * len(kappa) ** 2)
+                    sparse_max = q_tau[kappa] ** 2 / 2 - (q_tau[kappa].sum() - 1) ** 2 / (2 * len(kappa) ** 2)
                     sparse_max = sparse_max.sum() + .5
                     current_node['V'] = self._tau * sparse_max
                 else:
@@ -131,10 +131,9 @@ class MCTS:
                 kappa = np.array(kappa)
 
                 max_omega = np.maximum(q_tau - (q_tau[kappa].sum() - 1) / len(kappa),
-                                       np.zeros(len(kappa)))
+                                       np.zeros(len(q_tau)))
                 probs = (1 - lambda_coeff) * max_omega + lambda_coeff / n_actions
             else:
                 raise ValueError
 
-            print(probs.sum(), max_omega)
             return np.random.choice(np.arange(n_actions), p=probs)

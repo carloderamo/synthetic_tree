@@ -106,9 +106,8 @@ class SyntheticTree:
                             kappa.append(idx)
                     kappa = np.array(kappa)
 
-                    sparse_max = means_tau ** 2 / 2 - (np.array(
-                        [means_tau[i] for i in kappa]).sum() - 1) ** 2 / (
-                                         2 * len(kappa) ** 2)
+                    sparse_max = means_tau[kappa] ** 2 / 2 - (
+                            means_tau[kappa].sum() - 1) ** 2 / (2 * len(kappa) ** 2)
                     sparse_max = sparse_max.sum() + .5
 
                     return self._tau * sparse_max

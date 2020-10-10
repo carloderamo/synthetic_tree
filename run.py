@@ -31,7 +31,7 @@ exploration_coeff = .1
 k = 100
 d = 1
 tau = .01
-algorithms = {'tents': 'TENTS'}
+algorithms = {'uct': 'UCT', 'ments': 'MENTS', 'rents': 'RENTS', 'tents': 'TENTS'}
 
 for alg in algorithms.keys():
     out = Parallel(n_jobs=-1)(delayed(experiment)(alg) for _ in range(n_exp))
