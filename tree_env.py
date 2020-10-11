@@ -56,7 +56,7 @@ class SyntheticTree:
         return self.state
 
     def rollout(self, state):
-        return np.random.normal(self._tree.nodes[state]['mean'])
+        return np.random.normal(self._tree.nodes[state]['mean'], scale=.05)
 
     @property
     def tree(self):

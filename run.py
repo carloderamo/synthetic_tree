@@ -27,11 +27,11 @@ def experiment(algorithm):
 n_exp = 5
 n_trees = 5
 n_simulations = 10000
-exploration_coeff = .1
-k = 100
-d = 1
+exploration_coeff = .5
+k = 8
+d = 4
 tau = .01
-algorithms = {'tents': 'TENTS'}
+algorithms = {'uct': 'UCT', 'ments': 'MENTS', 'rents': 'RENTS', 'tents': 'TENTS'}
 
 for alg in algorithms.keys():
     out = Parallel(n_jobs=-1)(delayed(experiment)(alg) for _ in range(n_exp))
