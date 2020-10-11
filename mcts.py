@@ -16,8 +16,12 @@ class MCTS:
             if self._algorithm == 'rents':
                 weights = np.array([tree_env.tree[e[0]][e[1]]['N'] for e in tree_env.tree.edges(0)])
                 vis_ratio = weights / weights.sum()
+                max_means_tau = tree_env.means_tau.max()
+                weighted_logsumexp_means = max_means_tau + np.log(
+                    np.sum(vis_ratio * np.exp(tree_env.means_tau - max_means_tau))
+                )
                 tree_env.optimal_v_root.append(
-                    self._tau * np.log(np.sum(vis_ratio * tree_env.pre_weight_optimal))
+                    self._tau * vis_ratio * weighted_logsumexp_means
                 )
 
         return v_hat
@@ -50,7 +54,11 @@ class MCTS:
                         [tree_env.tree[e[0]][e[1]]['N'] / (tree_env.tree.nodes[e[0]][
                             'N'] + 1e-10) for e in out_edges]
                     )
-                    current_node['V'] = self._tau * np.log(np.sum(visitation_ratio * np.exp(qs / self._tau)))
+                    qs_tau = qs / self._tau
+                    weighted_logsumexp_qs = qs_tau.max() + np.log(
+                        np.sum(visitation_ratio * np.exp(qs_tau - qs_tau.max()))
+                    )
+                    current_node['V'] = self._tau * weighted_logsumexp_qs
                 elif self._algorithm == 'tents':
                     q_tau = qs / self._tau
                     temp_q_tau = q_tau.copy()
@@ -114,7 +122,8 @@ class MCTS:
                 visitation_ratio = np.array(
                     [tree_env.tree[e[0]][e[1]]['N'] / (tree_env.tree.nodes[e[0]]['N'] + 1e-10) for e in out_edges]
                 )
-                q_exp_tau = np.exp(qs / self._tau)
+                qs_tau = qs / self._tau
+                q_exp_tau = np.exp(qs_tau - qs_tau.max())
                 probs = (1 - lambda_coeff) * visitation_ratio * q_exp_tau / q_exp_tau.sum() + lambda_coeff / n_actions
                 probs[np.random.randint(len(probs))] += 1 - probs.sum()
 

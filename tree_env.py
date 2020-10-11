@@ -35,7 +35,7 @@ class SyntheticTree:
             self.optimal_v_root = self._solver()
         else:
             self.optimal_v_root = list()
-            self.pre_weight_optimal = self._solver()
+            self.means_tau = self._solver()
 
         self.state = None
 
@@ -90,9 +90,9 @@ class SyntheticTree:
                     )
             elif self._algorithm == 'rents':
                 if successors[0] in self.leaves:
-                    return np.exp([self._tree.nodes[x]['mean'] / self._tau for x in self._tree.successors(node)])
+                    return np.array([self._tree.nodes[x]['mean'] / self._tau for x in self._tree.successors(node)])
                 else:
-                    return np.exp([self._solver(n) / self._tau for n in self._tree.successors(node)])
+                    return np.array([self._solver(n) / self._tau for n in self._tree.successors(node)])
             elif self._algorithm == 'tents':
                 def sparse_max(means_tau):
                     temp_means_tau = means_tau.copy()
