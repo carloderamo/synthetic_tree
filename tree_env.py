@@ -31,11 +31,7 @@ class SyntheticTree:
         for i, n in enumerate(self.leaves):
             self._tree.nodes[n]['mean'] = means[i]
 
-        if self._algorithm != 'rents':
-            self.optimal_v_root = self._solver()
-        else:
-            self.optimal_v_root = list()
-            self.means_tau = self._solver()
+        self.optimal_v_root = self._solver()
 
         self.state = None
 
@@ -79,7 +75,7 @@ class SyntheticTree:
             return max_mean
         else:
             successors = [n for n in self._tree.successors(node)]
-            if self._algorithm == 'ments':
+            if self._algorithm == 'ments' or self._algorithm == 'rents':
                 if successors[0] in self.leaves:
                     return self._tau * logsumexp(
                         [self._tree.nodes[x]['mean'] / self._tau for x in self._tree.successors(node)]
@@ -88,11 +84,6 @@ class SyntheticTree:
                     return self._tau * logsumexp(
                         [self._solver(n) / self._tau for n in self._tree.successors(node)]
                     )
-            elif self._algorithm == 'rents':
-                if successors[0] in self.leaves:
-                    return np.array([self._tree.nodes[x]['mean'] / self._tau for x in self._tree.successors(node)])
-                else:
-                    return np.array([self._solver(n) / self._tau for n in self._tree.successors(node)])
             elif self._algorithm == 'tents':
                 def sparse_max(means_tau):
                     temp_means_tau = means_tau.copy()

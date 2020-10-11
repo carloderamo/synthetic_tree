@@ -13,16 +13,6 @@ class MCTS:
         for i in range(n_simulations):
             tree_env.reset()
             v_hat[i] = self._simulation(tree_env)
-            if self._algorithm == 'rents':
-                weights = np.array([tree_env.tree[e[0]][e[1]]['N'] for e in tree_env.tree.edges(0)])
-                vis_ratio = weights / weights.sum()
-                max_means_tau = tree_env.means_tau.max()
-                weighted_logsumexp_means = max_means_tau + np.log(
-                    np.sum(vis_ratio * np.exp(tree_env.means_tau - max_means_tau))
-                )
-                tree_env.optimal_v_root.append(
-                    self._tau * vis_ratio * weighted_logsumexp_means
-                )
 
         return v_hat
 
