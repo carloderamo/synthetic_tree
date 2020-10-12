@@ -72,5 +72,7 @@ if plot:
         plt.legend(algorithms.values())
     plt.show()
 
-np.save('diff_heatmap.npy', diff_heatmap)
-np.save('diff_uct_heatmap.npy', diff_uct_heatmap)
+np.save('diff_heatmap_expl_%f_tau_%f.npy' % (exploration_coeff, tau),
+        diff_heatmap)
+np.save('diff_uct_heatmap_%f_tau_%f.npy' % (exploration_coeff, tau),
+        diff_uct_heatmap)
