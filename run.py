@@ -30,7 +30,7 @@ exploration_coeff = .5
 ks = [2, 4, 6, 8, 10]
 ds = [1, 2, 3, 4, 5]
 tau = .01
-algorithms = {'tents': 'TENTS'}
+algorithms = {'uct': 'UCT', 'ments': 'MENTS', 'rents': 'RENTS', 'tents': 'TENTS'}
 plot = False
 
 diff_heatmap = np.zeros((len(algorithms), len(ks), len(ds)))
