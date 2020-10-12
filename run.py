@@ -65,6 +65,6 @@ for x, k in enumerate(ks):
 np.save(folder_name + '/diff_heatmap_expl_%.2f_tau_%.2f.npy' % (
     exploration_coeff, tau), diff_heatmap
 )
-np.save(folder_name + '/diff_uct_heatmap_%.2f_tau_%.2f.npy' % (
+np.save(folder_name + '/diff_uct_heatmap_expl_%.2f_tau_%.2f.npy' % (
     exploration_coeff, tau), diff_uct_heatmap
 )
