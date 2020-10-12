@@ -134,6 +134,7 @@ class MCTS:
                 max_omega = np.maximum(q_tau - (q_tau[kappa].sum() - 1) / len(kappa),
                                        np.zeros(len(q_tau)))
                 probs = (1 - lambda_coeff) * max_omega + lambda_coeff / n_actions
+                print(probs)
             else:
                 raise ValueError
 

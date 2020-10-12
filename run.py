@@ -26,11 +26,11 @@ def experiment(algorithm, k, d):
 n_exp = 5
 n_trees = 5
 n_simulations = 10000
-exploration_coeff = .1
-ks = [5, 8, 10, 25, 50]
+exploration_coeff = .5
+ks = [2, 4, 6, 8, 10]
 ds = [1, 2, 3, 4, 5]
 tau = .01
-algorithms = {'uct': 'UCT', 'ments': 'MENTS', 'rents': 'RENTS', 'tents': 'TENTS'}
+algorithms = {'tents': 'TENTS'}
 plot = False
 
 diff_heatmap = np.zeros((len(algorithms), len(ks), len(ds)))
