@@ -34,12 +34,16 @@ exploration_coeff = .5
 tau = .01
 algorithms = {'uct': 'UCT', 'ments': 'MENTS', 'rents': 'RENTS', 'tents': 'TENTS'}
 
+folder_name = './logs/' + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+
+pathlib.Path(folder_name).mkdir(parents=True)
+
 diff_heatmap = np.zeros((len(algorithms), len(ks), len(ds)))
 diff_uct_heatmap = np.zeros((len(algorithms), len(ks), len(ds)))
 for x, k in enumerate(ks):
     for y, d in enumerate(ds):
-        folder_name = './logs/' + 'k_' + str(k) + '_d_' + str(d)
-        pathlib.Path(folder_name).mkdir(parents=True, exist_ok=True)
+        subfolder_name = folder_name + '/k_' + str(k) + '_d_' + str(d)
+        pathlib.Path(subfolder_name).mkdir(parents=True)
         for z, alg in enumerate(algorithms.keys()):
             print('Branching factor: %d, Depth: %d, Alg: %s' % (k, d, alg))
             out = Parallel(n_jobs=-1)(delayed(experiment)(alg, k, d) for _ in range(n_exp))
@@ -51,10 +55,10 @@ for x, k in enumerate(ks):
             diff_heatmap[z, x, y] = avg_diff[-1]
             diff_uct_heatmap[z, x, y] = avg_diff_uct[-1]
             
-            np.save(folder_name + '/diff_%s_expl_%.2f_tau_%.2f.npy' % (
+            np.save(subfolder_name + '/diff_%s_expl_%.2f_tau_%.2f.npy' % (
                 alg, exploration_coeff, tau), diff
             )
-            np.save(folder_name + '/diff_uct_%s_expl_%.2f_tau_%.2f.npy' % (
+            np.save(subfolder_name + '/diff_uct_%s_expl_%.2f_tau_%.2f.npy' % (
                 alg, exploration_coeff, tau), diff_uct
             )
 
