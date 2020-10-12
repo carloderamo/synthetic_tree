@@ -31,6 +31,10 @@ class SyntheticTree:
         for i, n in enumerate(self.leaves):
             self._tree.nodes[n]['mean'] = means[i]
 
+        self.max_mean = 0.
+        for leaf in self.leaves:
+            self.max_mean = max(self._tree.nodes[leaf]['mean'], self.max_mean)
+
         self.optimal_v_root = self._solver()
 
         self.state = None
@@ -67,15 +71,11 @@ class SyntheticTree:
             self._tree.nodes[node]['mean'] = weight
 
     def _solver(self, node=0):
-        if self._algorithm == 'uct':
-            max_mean = 0.
-            for leaf in self.leaves:
-                max_mean = max(self._tree.nodes[leaf]['mean'], max_mean)
-
-            return max_mean
+        if self._algorithm == 'uct' or self._algorithm == 'rents':
+            return self.max_mean
         else:
             successors = [n for n in self._tree.successors(node)]
-            if self._algorithm == 'ments' or self._algorithm == 'rents':
+            if self._algorithm == 'ments':
                 if successors[0] in self.leaves:
                     return self._tau * logsumexp(
                         [self._tree.nodes[x]['mean'] / self._tau for x in self._tree.successors(node)]
