@@ -11,7 +11,6 @@ def experiment(algorithm, k, d):
                 algorithm=algorithm,
                 tau=tau)
 
-    print(k)
     v_hat = np.zeros((n_trees, n_simulations))
     diff = np.zeros_like(v_hat)
     diff_uct = np.zeros_like(v_hat)
@@ -28,7 +27,7 @@ n_exp = 5
 n_trees = 5
 n_simulations = 10000
 exploration_coeff = .1
-ks = [2, 5, 8, 10, 25, 50, 100]
+ks = [2, 5, 8, 10, 25, 50]
 ds = [1, 2, 4, 5]
 tau = .01
 algorithms = {'uct': 'UCT', 'ments': 'MENTS', 'rents': 'RENTS', 'tents': 'TENTS'}
@@ -39,6 +38,7 @@ diff_uct_heatmap = np.zeros((len(algorithms), len(ks), len(ds)))
 for x, k in enumerate(ks):
     for y, d in enumerate(ds):
         for z, alg in enumerate(algorithms.keys()):
+            print('Branching factor: %d, Depth: %d, Alg: %s' % (k, d, alg))
             out = Parallel(n_jobs=-1)(delayed(experiment)(alg, k, d) for _ in range(n_exp))
             v_hat = np.array([o[0]] for o in out)
             diff = np.array([o[1] for o in out])
