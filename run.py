@@ -28,7 +28,7 @@ def experiment(algorithm, k, d):
 n_exp = 5
 n_trees = 5
 n_simulations = 10000
-ks = [2, 4, 6, 8, 10]
+ks = [8, 10, 12, 14, 16]
 ds = [1, 2, 3, 4, 5]
 exploration_coeff = .5
 tau = .01

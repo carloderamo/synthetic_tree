@@ -66,7 +66,7 @@ for t, d in zip(titles_diff, diffs):
         ax.set_yticks(np.arange(len(ks)))
         ax.set_xticklabels(ds)
         ax.set_yticklabels(ks)
-        im.set_clim(0, 1)
+        im.set_clim(0, .3)
     cb_ax = fig.add_axes([0.875, 0.15, 0.05, 0.7])
     fig.colorbar(im, cax=cb_ax)
 
