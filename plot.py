@@ -7,21 +7,19 @@ n_trees = 5
 ks = [2, 4, 6, 8, 10]
 ds = [1, 2, 3, 4, 5]
 k = 6
-d = 3
+d = 5
 n_simulations = 10000
 exploration_coeff = .5
 tau = .1
-algs = ['uct', 'ments', 'rents', 'tents']
+algs = ['uct', 'ments', 'tents']  # , 'rents']
 
-folder_name = 'logs/2020-10-12_23-57-17'
+folder_name = 'logs/expl_%.2f_tau_%.2f' % (exploration_coeff, tau)
 
 # PLOTS
-subfolder_name = folder_name + '/k_%d_d_%d' % (k, d)
 plt.figure()
 for alg in algs:
-    diff = np.load(subfolder_name + '/diff_%s_expl_%.2f_tau_%.2f.npy' % (
-        alg, exploration_coeff, tau)
-    )
+    subfolder_name = folder_name + '/k_%d_d_%d' % (k, d)
+    diff = np.load(subfolder_name + '/diff_%s.npy' % (alg))
     avg_diff = diff.mean(0).mean(0)
     plt.subplot(2, 1, 1)
     plt.plot(avg_diff)
@@ -30,9 +28,7 @@ for alg in algs:
     plt.fill_between(np.arange(n_simulations), avg_diff - err, avg_diff + err,
                      alpha=.5)
 
-    diff_uct = np.load(subfolder_name + '/diff_uct_%s_expl_%.2f_tau_%.2f.npy' % (
-        alg, exploration_coeff, tau)
-    )
+    diff_uct = np.load(subfolder_name + '/diff_uct_%s.npy' % (alg))
     avg_diff_uct = diff_uct.mean(0).mean(0)
     plt.subplot(2, 1, 2)
     plt.plot(avg_diff_uct)
@@ -48,12 +44,9 @@ for i in range(1, 3):
     plt.legend([alg.upper() for alg in algs])
 
 # HEATMAPS
-diff = np.load(folder_name + '/diff_heatmap_expl_%.2f_tau_%.2f.npy' % (
-    exploration_coeff, tau)
-)
-diff_uct = np.load(folder_name + '/diff_uct_heatmap_expl_%.2f_tau_%.2f.npy' % (
-    exploration_coeff, tau)
-)
+diff = np.load(folder_name + '/diff_heatmap.npy'))
+diff_uct = np.load(folder_name + '/diff_uct_heatmap.npy')
+
 diffs = [diff, diff_uct]
 titles_diff = ['DIFF', 'DIFF_UCT']
 for t, d in zip(titles_diff, diffs):
