@@ -20,7 +20,7 @@ plt.figure()
 for alg in algs:
     subfolder_name = folder_name + '/k_%d_d_%d' % (k, d)
     diff = np.load(subfolder_name + '/diff_%s.npy' % (alg))
-    avg_diff = diff.mean(0).mean(0)
+    avg_diff = diff.mean(0)
     plt.subplot(2, 1, 1)
     plt.plot(avg_diff)
     err = 2 * np.std(diff.reshape(n_exp * n_trees, n_simulations),
@@ -29,7 +29,7 @@ for alg in algs:
                      alpha=.5)
 
     diff_uct = np.load(subfolder_name + '/diff_uct_%s.npy' % (alg))
-    avg_diff_uct = diff_uct.mean(0).mean(0)
+    avg_diff_uct = diff_uct.mean(0)
     plt.subplot(2, 1, 2)
     plt.plot(avg_diff_uct)
     err = 2 * np.std(diff_uct.reshape(n_exp * n_trees, n_simulations),
