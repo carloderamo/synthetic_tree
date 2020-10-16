@@ -113,8 +113,8 @@ class MCTS:
                     [tree_env.tree[e[0]][e[1]]['N'] / (tree_env.tree.nodes[e[0]]['N'] + 1e-10) for e in out_edges]
                 )
                 qs_tau = qs / self._tau
-                q_exp_tau = np.exp(qs_tau - qs_tau.max())
-                probs = (1 - lambda_coeff) * visitation_ratio * q_exp_tau / q_exp_tau.sum() + lambda_coeff / n_actions
+                visitation_q_exp_tau = visitation_ratio * np.exp(qs_tau - qs_tau.max())
+                probs = (1 - lambda_coeff) * visitation_q_exp_tau / (visitation_q_exp_tau.sum() + 1e-10) + lambda_coeff / n_actions
                 probs[np.random.randint(len(probs))] += 1 - probs.sum()
 
                 return np.random.choice(np.arange(n_actions), p=probs)
