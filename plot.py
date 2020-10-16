@@ -4,10 +4,10 @@ from matplotlib import pyplot as plt
 
 n_exp = 5
 n_trees = 5
-ks = [2]#, 4, 6, 8, 10]
-ds = [1]#, 2, 3, 4, 5]
-k = 2
-d = 1
+ks = [2, 4, 6, 8, 10, 12, 14, 16]
+ds = [1, 2, 3, 4, 5]
+k = 6
+d = 3
 n_simulations = 10000
 exploration_coeff = .5
 tau = .1
