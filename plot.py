@@ -6,8 +6,8 @@ n_exp = 5
 n_trees = 5
 ks = [2, 4, 6, 8, 10, 12, 14, 16]
 ds = [1, 2, 3, 4, 5]
-k = 6
-d = 3
+k = 4
+d = 2
 n_simulations = 10000
 exploration_coeff = .5
 tau = .1
@@ -42,7 +42,7 @@ for i in range(1, 3):
     plt.grid()
     plt.ylim(0, .5)
     plt.legend([alg.upper() for alg in algs])
-'''
+
 # HEATMAPS
 diff = np.load(folder_name + '/diff_heatmap.npy'))
 diff_uct = np.load(folder_name + '/diff_uct_heatmap.npy')
@@ -62,5 +62,5 @@ for t, d in zip(titles_diff, diffs):
         im.set_clim(0, .3)
     cb_ax = fig.add_axes([0.875, 0.15, 0.05, 0.7])
     fig.colorbar(im, cax=cb_ax)
-'''
+
 plt.show()
