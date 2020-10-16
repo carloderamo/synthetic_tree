@@ -32,7 +32,7 @@ ks = [8, 10, 12, 14, 16]
 ds = [1, 2, 3, 4, 5]
 exploration_coeff = .5
 tau = .01
-algorithms = {'uct': 'UCT', 'ments': 'MENTS', 'rents': 'RENTS', 'tents': 'TENTS'}
+algorithms = {'uct': 'UCT', 'ments': 'MENTS', 'tents': 'TENTS'}  # , 'rents': 'RENTS'}
 
 folder_name = './logs/' + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 
