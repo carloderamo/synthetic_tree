@@ -51,8 +51,10 @@ for x, k in enumerate(ks):
                         pickle.dump(tree, f)
 
                 out += Parallel(n_jobs=-1)(delayed(experiment)(alg, tree) for _ in range(n_exp))
-            diff = np.array([o[0] for o in out])
-            diff_uct = np.array([o[1] for o in out])
+            out = np.array(out)
+
+            diff = out[:, 0]
+            diff_uct = out[:, 1]
 
             avg_diff = diff.mean(0)
             avg_diff_uct = diff_uct.mean(0)
