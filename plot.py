@@ -6,12 +6,12 @@ n_exp = 5
 n_trees = 5
 ks = [2, 4, 6, 8, 10, 12, 14, 16]
 ds = [1, 2, 3, 4, 5]
-k = 4
-d = 2
+k = 16
+d = 5
 n_simulations = 10000
 exploration_coeff = .5
 tau = .1
-algs = ['uct', 'ments', 'tents']  # , 'rents']
+algs = ['uct', 'ments', 'tents', 'rents']
 
 folder_name = 'logs/expl_%.2f_tau_%.2f' % (exploration_coeff, tau)
 
@@ -44,7 +44,7 @@ for i in range(1, 3):
     plt.legend([alg.upper() for alg in algs])
 
 # HEATMAPS
-diff = np.load(folder_name + '/diff_heatmap.npy'))
+diff = np.load(folder_name + '/diff_heatmap.npy')
 diff_uct = np.load(folder_name + '/diff_uct_heatmap.npy')
 
 diffs = [diff, diff_uct]
