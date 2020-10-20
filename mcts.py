@@ -10,11 +10,13 @@ class MCTS:
 
     def run(self, tree_env, n_simulations):
         v_hat = np.zeros(n_simulations)
+        self.sum_probs = np.zeros(tree_env._k)
+        regret = np.zeros_like(v_hat)
         for i in range(n_simulations):
             tree_env.reset()
-            v_hat[i] = self._simulation(tree_env)
+            v_hat[i], regret[i] = self._simulation(tree_env)
 
-        return v_hat
+        return v_hat, regret
 
     def _simulation(self, tree_env):
         path = self._navigate(tree_env)
@@ -70,19 +72,27 @@ class MCTS:
 
             current_node['N'] += 1
 
-        return tree_env.tree.nodes[0]['V']
+        v_hat = tree_env.tree.nodes[0]['V']
+        out_edges = [e for e in tree_env.tree.edges(0)]
+        qs = np.array([tree_env.tree[e[0]][e[1]]['Q'] for e in out_edges])
+        _, probs = self._select(tree_env=tree_env, state=0)
+        self.sum_probs += probs
+        regret = tree_env.tree.nodes[0]['N'] * tree_env.optimal_v_root -\
+            np.sum(qs * self.sum_probs)
+
+        return v_hat, regret
 
     def _navigate(self, tree_env):
         state = tree_env.state
-        action = self._select(tree_env)
+        action, _ = self._select(tree_env, state)
         next_state = tree_env.step(action)
         if next_state not in tree_env.leaves:
             return [[state, next_state]] + self._navigate(tree_env)
         else:
             return [[state, next_state]]
 
-    def _select(self, tree_env):
-        out_edges = [e for e in tree_env.tree.edges(tree_env.state)]
+    def _select(self, tree_env, state):
+        out_edges = [e for e in tree_env.tree.edges(state)]
         n_state_action = np.array(
             [tree_env.tree[e[0]][e[1]]['N'] for e in out_edges])
         qs = np.array(
@@ -96,7 +106,11 @@ class MCTS:
             else:
                 ucb_values = np.ones(len(n_state_action)) * np.inf
 
-            return np.random.choice(np.argwhere(ucb_values == np.max(ucb_values)).ravel())
+            chosen_action = np.random.choice(np.argwhere(ucb_values == np.max(ucb_values)).ravel())
+            probs = np.zeros_like(ucb_values)
+            probs[chosen_action] += 1
+
+            return chosen_action, probs
         else:
             n_actions = len(out_edges)
             lambda_coeff = np.clip(self._exploration_coeff * n_actions / np.log(
@@ -106,8 +120,6 @@ class MCTS:
                 q_exp_tau = np.exp(qs / self._tau)
                 probs = (1 - lambda_coeff) * q_exp_tau / q_exp_tau.sum() + lambda_coeff / n_actions
                 probs[np.random.randint(len(probs))] += 1 - probs.sum()
-
-                return np.random.choice(np.arange(n_actions), p=probs)
             elif self._algorithm == 'tents':
                 q_tau = qs / self._tau
                 temp_q_tau = q_tau.copy()
@@ -132,9 +144,7 @@ class MCTS:
                 visitation_q_exp_tau = visitation_ratio * np.exp(qs_tau - qs_tau.max())
                 probs = (1 - lambda_coeff) * visitation_q_exp_tau / (visitation_q_exp_tau.sum() + 1e-10) + lambda_coeff / n_actions
                 probs[np.random.randint(len(probs))] += 1 - probs.sum()
-
-                return np.random.choice(np.arange(n_actions), p=probs)
             else:
                 raise ValueError
 
-            return np.random.choice(np.arange(n_actions), p=probs)
+            return np.random.choice(np.arange(n_actions), p=probs), probs

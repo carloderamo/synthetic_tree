@@ -13,11 +13,11 @@ def experiment(algorithm, tree):
                 algorithm=algorithm,
                 tau=tau)
 
-    v_hat = mcts.run(tree, n_simulations)
+    v_hat, regret = mcts.run(tree, n_simulations)
     diff = np.abs(v_hat - tree.optimal_v_root)
     diff_uct = np.abs(v_hat - tree.max_mean)
 
-    return diff, diff_uct
+    return diff, diff_uct, regret
 
 
 n_exp = 5
@@ -29,10 +29,11 @@ exploration_coeff = .5
 tau = .01
 algorithms = {'uct': 'UCT', 'ments': 'MENTS', 'tents': 'TENTS', 'rents': 'RENTS'}
 
-folder_name = './logs/expl_%.2f_tau_%.2f' % (exploration_coeff, tau)
+folder_name = './results/expl_%.2f_tau_%.2f' % (exploration_coeff, tau)
 
 diff_heatmap = np.zeros((len(algorithms), len(ks), len(ds)))
-diff_uct_heatmap = np.zeros((len(algorithms), len(ks), len(ds)))
+diff_uct_heatmap = np.zeros_like(diff_heatmap)
+regret_heatmap = np.zeros_like(diff_heatmap)
 for x, k in enumerate(ks):
     for y, d in enumerate(ds):
         subfolder_name = folder_name + '/k_' + str(k) + '_d_' + str(d)
@@ -56,14 +57,19 @@ for x, k in enumerate(ks):
 
             diff = out[:, 0]
             diff_uct = out[:, 1]
+            regret = out[:, 2]
 
             avg_diff = diff.mean(0)
             avg_diff_uct = diff_uct.mean(0)
+            avg_regret = regret.mean(0)
             diff_heatmap[z, x, y] = avg_diff[-1]
             diff_uct_heatmap[z, x, y] = avg_diff_uct[-1]
+            regret_heatmap[z, x, y] = avg_regret[-1]
 
             np.save(subfolder_name + '/diff_%s.npy' % (alg), diff)
             np.save(subfolder_name + '/diff_uct_%s.npy' % (alg), diff_uct)
+            np.save(subfolder_name + '/regret_%s.npy' % (alg), regret)
 
 np.save(folder_name + '/diff_heatmap.npy', diff_heatmap)
 np.save(folder_name + '/diff_uct_heatmap.npy', diff_uct_heatmap)
+np.save(folder_name + '/regret_heatmap.npy', regret_heatmap)
