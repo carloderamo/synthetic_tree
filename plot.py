@@ -21,7 +21,7 @@ for alg in algs:
     subfolder_name = folder_name + '/k_%d_d_%d' % (k, d)
     diff = np.load(subfolder_name + '/diff_%s.npy' % (alg))
     avg_diff = diff.mean(0)
-    plt.subplot(2, 1, 1)
+    plt.subplot(3, 1, 1)
     plt.plot(avg_diff)
     err = 2 * np.std(diff.reshape(n_exp * n_trees, n_simulations),
                      axis=0) / np.sqrt(n_exp * n_trees)
@@ -30,15 +30,24 @@ for alg in algs:
 
     diff_uct = np.load(subfolder_name + '/diff_uct_%s.npy' % (alg))
     avg_diff_uct = diff_uct.mean(0)
-    plt.subplot(2, 1, 2)
+    plt.subplot(3, 1, 2)
     plt.plot(avg_diff_uct)
     err = 2 * np.std(diff_uct.reshape(n_exp * n_trees, n_simulations),
                      axis=0) / np.sqrt(n_exp * n_trees)
     plt.fill_between(np.arange(n_simulations), avg_diff_uct - err,
                      avg_diff_uct + err, alpha=.5)
 
-for i in range(1, 3):
-    plt.subplot(2, 1, i)
+    regret = np.load(subfolder_name + '/regret_%s.npy' % (alg))
+    avg_regret = regret.mean(0)
+    plt.subplot(3, 1, 3)
+    plt.plot(avg_regret)
+    err = 2 * np.std(regret.reshape(n_exp * n_trees, n_simulations),
+                     axis=0) / np.sqrt(n_exp * n_trees)
+    plt.fill_between(np.arange(n_simulations), avg_regret - err,
+                     avg_regret + err, alpha=.5)
+
+for i in range(1, 4):
+    plt.subplot(3, 1, i)
     plt.grid()
     plt.ylim(0, .5)
     plt.legend([alg.upper() for alg in algs])
@@ -48,7 +57,7 @@ diff = np.load(folder_name + '/diff_heatmap.npy')
 diff_uct = np.load(folder_name + '/diff_uct_heatmap.npy')
 
 diffs = [diff, diff_uct]
-titles_diff = ['DIFF', 'DIFF_UCT']
+titles_diff = ['DIFF', 'DIFF_UCT', 'PSEUDO_REGRET']
 for t, d in zip(titles_diff, diffs):
     fig, axs = plt.subplots(nrows=2, ncols=2)
     fig.suptitle(t)
