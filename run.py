@@ -29,7 +29,7 @@ exploration_coeff = .5
 tau = .01
 algorithms = {'uct': 'UCT', 'ments': 'MENTS', 'tents': 'TENTS', 'rents': 'RENTS'}
 
-folder_name = './results/expl_%.2f_tau_%.2f' % (exploration_coeff, tau)
+folder_name = './logs/expl_%.2f_tau_%.2f' % (exploration_coeff, tau)
 
 diff_heatmap = np.zeros((len(algorithms), len(ks), len(ds)))
 diff_uct_heatmap = np.zeros_like(diff_heatmap)
