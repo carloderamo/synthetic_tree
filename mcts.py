@@ -36,6 +36,7 @@ class MCTS:
                 current_node['V'] = (current_node['V'] * current_node['N'] +
                                      tree_env.tree[e[0]][e[1]]['Q']) / (current_node['N'] + 1)
             else:
+                current_node['N'] += 1
                 out_edges = [e for e in tree_env.tree.edges(e[0])]
                 qs = np.array(
                     [tree_env.tree[e[0]][e[1]]['Q'] for e in out_edges])
@@ -59,8 +60,7 @@ class MCTS:
                     current_node['V'] = self._tau * sparse_max
                 elif self._algorithm == 'rents':
                     visitation_ratio = np.array(
-                        [tree_env.tree[e[0]][e[1]]['N'] / (tree_env.tree.nodes[e[0]][
-                            'N'] + 1e-100) for e in out_edges]
+                        [tree_env.tree[e[0]][e[1]]['N'] / (current_node['N']) for e in out_edges]
                     )
                     qs_tau = qs / self._tau
                     weighted_logsumexp_qs = qs_tau.max() + np.log(
@@ -69,8 +69,6 @@ class MCTS:
                     current_node['V'] = self._tau * weighted_logsumexp_qs
                 else:
                     raise ValueError
-
-            current_node['N'] += 1
 
         v_hat = tree_env.tree.nodes[0]['V']
         out_edges = [e for e in tree_env.tree.edges(0)]
