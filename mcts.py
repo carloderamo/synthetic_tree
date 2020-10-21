@@ -60,7 +60,7 @@ class MCTS:
                 elif self._algorithm == 'rents':
                     visitation_ratio = np.array(
                         [tree_env.tree[e[0]][e[1]]['N'] / (tree_env.tree.nodes[e[0]][
-                            'N'] + 1e-10) for e in out_edges]
+                            'N'] + 1e-100) for e in out_edges]
                     )
                     qs_tau = qs / self._tau
                     weighted_logsumexp_qs = qs_tau.max() + np.log(
@@ -138,11 +138,11 @@ class MCTS:
                 probs = (1 - lambda_coeff) * max_omega + lambda_coeff / n_actions
             elif self._algorithm == 'rents':
                 visitation_ratio = np.array(
-                    [tree_env.tree[e[0]][e[1]]['N'] / (tree_env.tree.nodes[e[0]]['N'] + 1e-10) for e in out_edges]
+                    [tree_env.tree[e[0]][e[1]]['N'] / (tree_env.tree.nodes[e[0]]['N'] + 1e-100) for e in out_edges]
                 )
                 qs_tau = qs / self._tau
                 visitation_q_exp_tau = visitation_ratio * np.exp(qs_tau - qs_tau.max())
-                probs = (1 - lambda_coeff) * visitation_q_exp_tau / (visitation_q_exp_tau.sum() + 1e-10) + lambda_coeff / n_actions
+                probs = (1 - lambda_coeff) * visitation_q_exp_tau / (visitation_q_exp_tau.sum() + 1e-100) + lambda_coeff / n_actions
                 probs[np.random.randint(len(probs))] += 1 - probs.sum()
             else:
                 raise ValueError
