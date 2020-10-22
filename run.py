@@ -25,9 +25,9 @@ n_trees = 5
 n_simulations = 10000
 ks = [2, 4, 6, 8, 10, 12, 14, 16]
 ds = [1, 2, 3, 4, 5]
-exploration_coeff = .5
+exploration_coeff = .1
 tau = .01
-algorithms = {'uct': 'UCT', 'ments': 'MENTS', 'tents': 'TENTS', 'rents': 'RENTS'}
+algorithms = {'uct': 'UCT', 'ments': 'MENTS', 'rents': 'RENTS', 'tents': 'TENTS'}
 
 folder_name = './logs/expl_%.2f_tau_%.2f' % (exploration_coeff, tau)
 
@@ -42,14 +42,13 @@ for x, k in enumerate(ks):
             print('Branching factor: %d, Depth: %d, Alg: %s' % (k, d, alg))
             out = list()
             for w in range(n_trees):
-                alg_path = 'uct' if alg == 'rents' else alg
                 try:
-                    with open(subfolder_name + '/tree%d_%s.pkl' % (w, alg_path), 'rb') as f:
+                    with open(subfolder_name + '/tree%d_%s.pkl' % (w, alg), 'rb') as f:
                         tree = pickle.load(f)
                 except FileNotFoundError as err:
                     print('Tree not found! Creating new tree...')
                     tree = SyntheticTree(k, d, alg, tau)
-                    with open(subfolder_name + '/tree%d_%s.pkl' % (w, alg_path), 'wb') as f:
+                    with open(subfolder_name + '/tree%d_%s.pkl' % (w, alg), 'wb') as f:
                         pickle.dump(tree, f)
 
                 out += Parallel(n_jobs=-1)(delayed(experiment)(alg, tree) for _ in range(n_exp))
