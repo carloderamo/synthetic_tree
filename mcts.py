@@ -41,6 +41,12 @@ class MCTS:
                     [tree_env.tree[e[0]][e[1]]['Q'] for e in out_edges])
                 if self._algorithm == 'ments':
                     current_node['V'] = self._tau * logsumexp(qs / self._tau)
+                elif self._algorithm == 'rents':
+                    qs_tau = qs / self._tau
+                    weighted_logsumexp_qs = qs_tau.max() + np.log(
+                        np.sum(current_node['prior'] * np.exp(qs_tau - qs_tau.max()))
+                    )
+                    current_node['V'] = self._tau * weighted_logsumexp_qs
                 elif self._algorithm == 'tents':
                     q_tau = qs / self._tau
                     temp_q_tau = q_tau.copy()
@@ -57,12 +63,6 @@ class MCTS:
                     sparse_max = q_tau[kappa] ** 2 / 2 - (q_tau[kappa].sum() - 1) ** 2 / (2 * len(kappa) ** 2)
                     sparse_max = sparse_max.sum() + .5
                     current_node['V'] = self._tau * sparse_max
-                elif self._algorithm == 'rents':
-                    qs_tau = qs / self._tau
-                    weighted_logsumexp_qs = qs_tau.max() + np.log(
-                        np.sum(current_node['prior'] * np.exp(qs_tau - qs_tau.max()))
-                    )
-                    current_node['V'] = self._tau * weighted_logsumexp_qs
                 else:
                     raise ValueError
 
@@ -116,6 +116,11 @@ class MCTS:
                 q_exp_tau = np.exp(qs / self._tau)
                 probs = (1 - lambda_coeff) * q_exp_tau / q_exp_tau.sum() + lambda_coeff / n_actions
                 probs[np.random.randint(len(probs))] += 1 - probs.sum()
+            elif self._algorithm == 'rents':
+                qs_tau = qs / self._tau
+                prior_q_exp_tau = tree_env.tree.nodes[state]['prior'] * np.exp(qs_tau - qs_tau.max())
+                probs = (1 - lambda_coeff) * prior_q_exp_tau / (prior_q_exp_tau.sum()) + lambda_coeff / n_actions
+                probs[np.random.randint(len(probs))] += 1 - probs.sum()
             elif self._algorithm == 'tents':
                 q_tau = qs / self._tau
                 temp_q_tau = q_tau.copy()
@@ -132,11 +137,6 @@ class MCTS:
                 max_omega = np.maximum(q_tau - (q_tau[kappa].sum() - 1) / len(kappa),
                                        np.zeros(len(q_tau)))
                 probs = (1 - lambda_coeff) * max_omega + lambda_coeff / n_actions
-            elif self._algorithm == 'rents':
-                qs_tau = qs / self._tau
-                prior_q_exp_tau = tree_env.tree.nodes[state]['prior'] * np.exp(qs_tau - qs_tau.max())
-                probs = (1 - lambda_coeff) * prior_q_exp_tau / (prior_q_exp_tau.sum()) + lambda_coeff / n_actions
-                probs[np.random.randint(len(probs))] += 1 - probs.sum()
             else:
                 raise ValueError
 
