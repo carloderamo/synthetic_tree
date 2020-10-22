@@ -11,7 +11,7 @@ d = 5
 n_simulations = 10000
 exploration_coeff = .5
 tau = .1
-algs = ['uct', 'ments', 'tents', 'rents']
+algs = ['uct', 'ments', 'rents', 'tents']
 
 folder_name = 'results/expl_%.2f_tau_%.2f' % (exploration_coeff, tau)
 
