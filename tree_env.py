@@ -35,6 +35,21 @@ class SyntheticTree:
         for leaf in self.leaves:
             self.max_mean = max(self._tree.nodes[leaf]['mean'], self.max_mean)
 
+        if self._algorithm == 'rents':
+            def assign_priors(node=0):
+                successors = [n for n in self._tree.successors(node)]
+                if successors[0] not in self.leaves:
+                    means = np.array([assign_priors(s) for s in successors])
+                    self._tree.nodes[node]['prior'] = means / means.sum()
+
+                    return means.max()
+                else:
+                    means = np.array([self._tree.nodes[s]['mean'] for s in successors])
+                    self._tree.nodes[node]['prior'] = means / means.sum()
+
+                    return means.max()
+            assign_priors()
+
         self.optimal_v_root = self._solver()
 
         self.state = None
@@ -71,7 +86,7 @@ class SyntheticTree:
             self._tree.nodes[node]['mean'] = weight
 
     def _solver(self, node=0):
-        if self._algorithm == 'uct' or self._algorithm == 'rents':
+        if self._algorithm == 'uct':
             return self.max_mean
         else:
             successors = [n for n in self._tree.successors(node)]
@@ -109,5 +124,14 @@ class SyntheticTree:
                     return self._tau * sparse_max(np.array(
                         [self._solver(x) / self._tau for x in self._tree.successors(node)])
                     )
+            elif self._algorithm == 'rents':
+                if successors[0] in self.leaves:
+                    return self._tau * np.log(np.sum(self._tree.nodes[node]['prior'] * np.exp(
+                        [self._tree.nodes[x]['mean'] / self._tau for x in self._tree.successors(node)]
+                    )))
+                else:
+                    return self._tau * np.log(np.sum(self._tree.nodes[node]['prior'] * np.exp(
+                        [self._solver(n) / self._tau for n in self._tree.successors(node)]
+                    )))
             else:
                 raise ValueError
