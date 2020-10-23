@@ -10,13 +10,12 @@ class MCTS:
 
     def run(self, tree_env, n_simulations):
         v_hat = np.zeros(n_simulations)
-        self.sum_probs = np.zeros(tree_env._k)
         regret = np.zeros_like(v_hat)
         for i in range(n_simulations):
             tree_env.reset()
             v_hat[i], regret[i] = self._simulation(tree_env)
 
-        return v_hat, regret
+        return v_hat, regret.cumsum()
 
     def _simulation(self, tree_env):
         path = self._navigate(tree_env)
@@ -69,18 +68,16 @@ class MCTS:
             current_node['N'] += 1
 
         v_hat = tree_env.tree.nodes[0]['V']
+        max_a = self._select(tree_env=tree_env, state=0)
         out_edges = [e for e in tree_env.tree.edges(0)]
-        qs = np.array([tree_env.tree[e[0]][e[1]]['Q'] for e in out_edges])
-        _, probs = self._select(tree_env=tree_env, state=0)
-        self.sum_probs += probs
-        regret = tree_env.tree.nodes[0]['N'] * tree_env.optimal_v_root -\
-            np.sum(qs * self.sum_probs)
+        max_means = np.array([tree_env.tree.nodes[e[1]]['max_mean'] for e in out_edges])
+        regret = tree_env.max_mean - max_means[max_a]
 
         return v_hat, regret
 
     def _navigate(self, tree_env):
         state = tree_env.state
-        action, _ = self._select(tree_env, state)
+        action = self._select(tree_env, state)
         next_state = tree_env.step(action)
         if next_state not in tree_env.leaves:
             return [[state, next_state]] + self._navigate(tree_env)
@@ -115,12 +112,10 @@ class MCTS:
             if self._algorithm == 'ments':
                 q_exp_tau = np.exp(qs / self._tau)
                 probs = (1 - lambda_coeff) * q_exp_tau / q_exp_tau.sum() + lambda_coeff / n_actions
-                probs[np.random.randint(len(probs))] += 1 - probs.sum()
             elif self._algorithm == 'rents':
                 qs_tau = qs / self._tau
                 prior_q_exp_tau = tree_env.tree.nodes[state]['prior'] * np.exp(qs_tau - qs_tau.max())
                 probs = (1 - lambda_coeff) * prior_q_exp_tau / (prior_q_exp_tau.sum()) + lambda_coeff / n_actions
-                probs[np.random.randint(len(probs))] += 1 - probs.sum()
             elif self._algorithm == 'tents':
                 q_tau = qs / self._tau
                 temp_q_tau = q_tau.copy()
@@ -140,4 +135,4 @@ class MCTS:
             else:
                 raise ValueError
 
-            return np.random.choice(np.arange(n_actions), p=probs), probs
+            return np.random.choice(np.arange(n_actions), p=probs)

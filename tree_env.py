@@ -35,20 +35,7 @@ class SyntheticTree:
         for leaf in self.leaves:
             self.max_mean = max(self._tree.nodes[leaf]['mean'], self.max_mean)
 
-        if self._algorithm == 'rents':
-            def assign_priors(node=0):
-                successors = [n for n in self._tree.successors(node)]
-                if successors[0] not in self.leaves:
-                    means = np.array([assign_priors(s) for s in successors])
-                    self._tree.nodes[node]['prior'] = means / means.sum()
-
-                    return means.max()
-                else:
-                    means = np.array([self._tree.nodes[s]['mean'] for s in successors])
-                    self._tree.nodes[node]['prior'] = means / means.sum()
-
-                    return means.max()
-            assign_priors()
+        self._assign_priors_maxs()
 
         self.optimal_v_root = self._solver()
 
@@ -84,6 +71,21 @@ class SyntheticTree:
                                    weight + self._tree[e[0]][e[1]]['weight'])
         else:
             self._tree.nodes[node]['mean'] = weight
+
+    def _assign_priors_maxs(self, node=0):
+        successors = [n for n in self._tree.successors(node)]
+        if successors[0] not in self.leaves:
+            means = np.array([self._assign_priors_maxs(s) for s in successors])
+            self._tree.nodes[node]['prior'] = means / means.sum()
+            self._tree.nodes[node]['max_mean'] = means.max()
+
+            return means.max()
+        else:
+            means = np.array([self._tree.nodes[s]['mean'] for s in successors])
+            self._tree.nodes[node]['prior'] = means / means.sum()
+            self._tree.nodes[node]['max_mean'] = means.max()
+
+            return means.max()
 
     def _solver(self, node=0):
         if self._algorithm == 'uct':
