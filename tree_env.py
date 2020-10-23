@@ -77,13 +77,13 @@ class SyntheticTree:
         if successors[0] not in self.leaves:
             means = np.array([self._assign_priors_maxs(s) for s in successors])
             self._tree.nodes[node]['prior'] = means / means.sum()
-            self._tree.nodes[node]['max_mean'] = means.max()
+            self._tree.nodes[node]['mean'] = means.max()
 
             return means.max()
         else:
             means = np.array([self._tree.nodes[s]['mean'] for s in successors])
             self._tree.nodes[node]['prior'] = means / means.sum()
-            self._tree.nodes[node]['max_mean'] = means.max()
+            self._tree.nodes[node]['mean'] = means.max()
 
             return means.max()
 
