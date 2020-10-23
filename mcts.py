@@ -78,6 +78,7 @@ class MCTS:
     def _navigate(self, tree_env):
         state = tree_env.state
         action = self._select(tree_env, state)
+        print(action)
         next_state = tree_env.step(action)
         if next_state not in tree_env.leaves:
             return [[state, next_state]] + self._navigate(tree_env)
@@ -103,7 +104,7 @@ class MCTS:
             probs = np.zeros_like(ucb_values)
             probs[chosen_action] += 1
 
-            return chosen_action, probs
+            return chosen_action
         else:
             n_actions = len(out_edges)
             lambda_coeff = np.clip(self._exploration_coeff * n_actions / np.log(
