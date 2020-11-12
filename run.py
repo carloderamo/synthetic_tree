@@ -26,7 +26,7 @@ n_simulations = 10000
 ks = [2, 4, 6, 8, 10, 12, 14, 16]
 ds = [1, 2, 3, 4, 5]
 exploration_coeff = .1
-tau = .01
+tau = .1
 algorithms = {'uct': 'UCT', 'ments': 'MENTS', 'rents': 'RENTS', 'tents': 'TENTS'}
 
 folder_name = './logs/expl_%.2f_tau_%.2f' % (exploration_coeff, tau)
