@@ -31,10 +31,9 @@ class SyntheticTree:
         for i, n in enumerate(self.leaves):
             self._tree.nodes[n]['mean'] = means[i]
 
-        self.means = np.zeros(len(self.leaves))
-        for i, leaf in enumerate(self.leaves):
-            self.means[i] = self._tree.nodes[leaf]['mean']
-        self.max_mean = self.means.max()
+        self.max_mean = 0
+        for leaf in self.leaves:
+            self.max_mean = max(self.max_mean, self._tree.nodes[leaf]['mean'])
 
         self._assign_priors_maxs()
 
@@ -90,7 +89,10 @@ class SyntheticTree:
 
     def _solver(self, node=0):
         if self._algorithm == 'uct':
-            return self.max_mean, self.means
+            successors = [n for n in self._tree.successors(node)]
+            means = np.array([self._tree.nodes[s]['mean'] for s in successors])
+
+            return self.max_mean, means
         else:
             successors = [n for n in self._tree.successors(node)]
             if self._algorithm == 'ments':
