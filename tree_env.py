@@ -39,6 +39,8 @@ class SyntheticTree:
         self._assign_priors_maxs()
 
         self.optimal_v_root, self.q_root = self._solver()
+        print(self.optimal_v_root, self.q_root)
+        exit()
 
         self.state = None
 
@@ -95,22 +97,22 @@ class SyntheticTree:
             successors = [n for n in self._tree.successors(node)]
             if self._algorithm == 'ments':
                 if successors[0] in self.leaves:
-                    return self._tau * logsumexp(
-                        [self._tree.nodes[n]['mean'] / self._tau for n in self._tree.successors(node)]
-                    ), None
-                else:
-                    x = [self._solver(n)[0] / self._tau for n in self._tree.successors(node)]
+                    x = np.array([self._tree.nodes[n]['mean'] for n in self._tree.successors(node)])
 
-                    return self._tau * logsumexp(x), np.array(x)
+                    return self._tau * logsumexp(x / self._tau), x
+                else:
+                    x = np.array([self._solver(n)[0] for n in self._tree.successors(node)])
+
+                    return self._tau * logsumexp(x / self._tau), x
             elif self._algorithm == 'rents':
                 if successors[0] in self.leaves:
-                    return self._tau * np.log(np.sum(self._tree.nodes[node]['prior'] * np.exp(
-                        [self._tree.nodes[n]['mean'] / self._tau for n in self._tree.successors(node)]
-                    ))), None
-                else:
-                    x = [self._solver(n)[0] / self._tau for n in self._tree.successors(node)]
+                    x = np.array([self._tree.nodes[n]['mean'] for n in self._tree.successors(node)])
 
-                    return self._tau * np.log(np.sum(self._tree.nodes[node]['prior'] * np.exp(x))), np.array(x)
+                    return self._tau * np.log(np.sum(self._tree.nodes[node]['prior'] * np.exp(x / self._tau))), x
+                else:
+                    x = np.array([self._solver(n)[0] for n in self._tree.successors(node)])
+
+                    return self._tau * np.log(np.sum(self._tree.nodes[node]['prior'] * np.exp(x / self._tau))), x
             elif self._algorithm == 'tents':
                 def sparse_max(means_tau):
                     temp_means_tau = means_tau.copy()
@@ -130,12 +132,12 @@ class SyntheticTree:
                     return sparse_max
 
                 if successors[0] in self.leaves:
-                    means = np.array([self._tree.nodes[n]['mean'] for n in self._tree.successors(node)])
+                    x = np.array([self._tree.nodes[n]['mean'] for n in self._tree.successors(node)])
 
-                    return self._tau * sparse_max(means / self._tau), None
+                    return self._tau * sparse_max(x / self._tau), x
                 else:
-                    x = [self._solver(n)[0] / self._tau for n in self._tree.successors(node)]
+                    x = np.array([self._solver(n)[0] for n in self._tree.successors(node)])
 
-                    return self._tau * sparse_max(np.array(x)), np.array(x)
+                    return self._tau * sparse_max(np.array(x / self._tau)), x
             else:
                 raise ValueError
