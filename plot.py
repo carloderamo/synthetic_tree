@@ -103,12 +103,12 @@ for t, d in zip(titles_diff, diffs):
     max_d = d.max()
     for i, ax in enumerate(axs.flat):
         im = ax.imshow(d[i], cmap=plt.get_cmap('inferno'))
-        ax.set_title(algs[i].upper(), fontsize='x-large')
+        ax.set_title(algs[i].upper(), fontsize='xx-large')
         ax.set_xticks(np.arange(len(ds)))
         for tick in ax.xaxis.get_major_ticks():
-            tick.label.set_fontsize('x-large')
+            tick.label.set_fontsize('xx-large')
         for tick in ax.yaxis.get_major_ticks():
-            tick.label.set_fontsize('x-large')
+            tick.label.set_fontsize('xx-large')
         ax.set_yticks(np.arange(len(ks)))
         ax.set_xticklabels(ds)
         ax.set_yticklabels(ks)
@@ -116,6 +116,6 @@ for t, d in zip(titles_diff, diffs):
     cb_ax = fig.add_axes([0.65, 0.15, 0.05, 0.7])
     cbar = fig.colorbar(im, cax=cb_ax)
     for t in cbar.ax.get_yticklabels():
-        t.set_fontsize('x-large')
+        t.set_fontsize('xx-large')
 
 plt.show()
