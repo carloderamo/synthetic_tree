@@ -39,8 +39,6 @@ class SyntheticTree:
         self._assign_priors_maxs()
 
         self.optimal_v_root, self.q_root = self._solver()
-        print(self.optimal_v_root, self.q_root)
-        exit()
 
         self.state = None
 
