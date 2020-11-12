@@ -88,7 +88,7 @@ for kk, dd in zip(k, d):
     count_plot += 1
 
 plt.subplot(3, len(k), 3 * len(k) - 2)
-plt.legend([alg.upper() for alg in algs], fontsize='xx-large', ncol=len(algs), loc=[-2, -.6])
+plt.legend([alg.upper() for alg in algs], fontsize='xx-large', ncol=len(algs), loc=[-1.75, -.8], frameon=False)
 
 # HEATMAPS
 diff = np.load(folder_name + '/diff_heatmap.npy')
@@ -96,20 +96,26 @@ diff_uct = np.load(folder_name + '/diff_uct_heatmap.npy')
 regret = np.load(folder_name + '/regret_heatmap.npy')
 
 diffs = [diff, diff_uct, regret]
-titles_diff = ['DIFF', 'DIFF_UCT', 'PSEUDO_REGRET']
+titles_diff = [r'$\varepsilon_\Omega$', r'$\varepsilon_{UCT}$', 'R']
 for t, d in zip(titles_diff, diffs):
     fig, axs = plt.subplots(nrows=2, ncols=2)
-    fig.suptitle(t)
+    fig.suptitle(t, fontsize='xx-large')
     max_d = d.max()
     for i, ax in enumerate(axs.flat):
         im = ax.imshow(d[i], cmap=plt.get_cmap('inferno'))
-        ax.set_title(algs[i].upper())
+        ax.set_title(algs[i].upper(), fontsize='x-large')
         ax.set_xticks(np.arange(len(ds)))
+        for tick in ax.xaxis.get_major_ticks():
+            tick.label.set_fontsize('x-large')
+        for tick in ax.yaxis.get_major_ticks():
+            tick.label.set_fontsize('x-large')
         ax.set_yticks(np.arange(len(ks)))
         ax.set_xticklabels(ds)
         ax.set_yticklabels(ks)
         im.set_clim(0, max_d)
-    cb_ax = fig.add_axes([0.875, 0.15, 0.05, 0.7])
-    fig.colorbar(im, cax=cb_ax)
+    cb_ax = fig.add_axes([0.65, 0.15, 0.05, 0.7])
+    cbar = fig.colorbar(im, cax=cb_ax)
+    for t in cbar.ax.get_yticklabels():
+        t.set_fontsize('x-large')
 
 plt.show()
