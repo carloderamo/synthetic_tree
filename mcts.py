@@ -69,9 +69,7 @@ class MCTS:
 
         v_hat = tree_env.tree.nodes[0]['V']
         max_a = self._select(tree_env=tree_env, state=0)
-        out_edges = [e for e in tree_env.tree.edges(0)]
-        max_means = np.array([tree_env.tree.nodes[e[1]]['mean'] for e in out_edges])
-        regret = tree_env.max_mean - max_means[max_a]
+        regret = tree_env.q_root.max() - tree_env.q_root[max_a]
 
         return v_hat, regret
 
