@@ -13,7 +13,7 @@ exploration_coeff = .5
 tau = .1
 algs = ['uct', 'ments', 'rents', 'tents']
 
-folder_name = 'results/expl_%.2f_tau_%.2f' % (exploration_coeff, tau)
+folder_name = 'results/std_0.05/expl_%.2f_tau_%.2f' % (exploration_coeff, tau)
 
 # PLOTS
 max_diff = 0
