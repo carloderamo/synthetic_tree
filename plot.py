@@ -113,7 +113,7 @@ for t, d in zip(titles_diff, diffs):
         ax.set_xticklabels(ds)
         ax.set_yticklabels(ks)
         im.set_clim(0, max_d)
-    cb_ax = fig.add_axes([0.65, 0.15, 0.05, 0.7])
+    cb_ax = fig.add_axes([0.7, 0.15, 0.025, 0.7])
     cbar = fig.colorbar(im, cax=cb_ax)
     for t in cbar.ax.get_yticklabels():
         t.set_fontsize('xx-large')
