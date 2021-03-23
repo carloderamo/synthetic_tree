@@ -25,8 +25,8 @@ n_trees = 5
 n_simulations = 10000
 k = 100
 d = 1
-epsilons = [.01, .25, .05, .75, .1, .25, .5, .75, 1]
-taus = [.01, .25, .05, .75, .1, .25, .5, .75, 1]
+epsilons = [.01, .025, .05, .075, .1, .25, .5, .75, 1.]
+taus = [.01, .025, .05, .075, .1, .25, .5, .75, 1.]
 algorithms = {'uct': 'UCT', 'ments': 'MENTS', 'rents': 'RENTS', 'tents': 'TENTS'}
 
 folder_name = './logs/k_%d_d_%d' % (k, d)
