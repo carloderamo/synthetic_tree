@@ -4,16 +4,16 @@ from matplotlib import pyplot as plt
 
 n_exp = 5
 n_trees = 5
-ks = [2, 4, 6, 8, 10, 12, 14, 16]
-ds = [1, 2, 3, 4, 5]
-k = [16, 4, 8, 12, 16]
-d = [1, 2, 3, 4, 5]
 n_simulations = 10000
+k_heat = [50, 100, 200]  #, 4, 6, 8, 10, 12, 14, 16]
+d_heat = [50, 100, 200]  # [1, 2, 3, 4, 5]
+k = [50, 50, 100, 100, 200, 200]
+d = [1, 2, 1, 2, 1, 2]
 exploration_coeff = .1
 tau = .1
 algs = ['uct', 'ments', 'rents', 'tents']
 
-folder_name = 'results/std_0.05/expl_%.2f_tau_%.2f' % (exploration_coeff, tau)
+folder_name = 'results/kd/expl_%.2f_tau_%.2f' % (exploration_coeff, tau)
 
 # PLOTS
 plt.figure()
@@ -104,14 +104,14 @@ for t, d in zip(titles_diff, diffs):
     for i, ax in enumerate(axs.flat):
         im = ax.imshow(d[i], cmap=plt.get_cmap('inferno'))
         ax.set_title(algs[i].upper(), fontsize='xx-large')
-        ax.set_xticks(np.arange(len(ds)))
+        ax.set_xticks(np.arange(len(d_heat)))
         for tick in ax.xaxis.get_major_ticks():
             tick.label.set_fontsize('xx-large')
         for tick in ax.yaxis.get_major_ticks():
             tick.label.set_fontsize('xx-large')
-        ax.set_yticks(np.arange(len(ks)))
-        ax.set_xticklabels(ds)
-        ax.set_yticklabels(ks)
+        ax.set_yticks(np.arange(len(k_heat)))
+        ax.set_xticklabels(d_heat)
+        ax.set_yticklabels(k_heat)
         im.set_clim(0, max_d)
     cb_ax = fig.add_axes([0.7, 0.15, 0.025, 0.7])
     cbar = fig.colorbar(im, cax=cb_ax)
