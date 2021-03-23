@@ -36,7 +36,7 @@ diff_uct_heatmap = np.zeros_like(diff_heatmap)
 regret_heatmap = np.zeros_like(diff_heatmap)
 for x, eps in enumerate(epsilons):
     for y, tau in enumerate(taus):
-        subfolder_name = folder_name + '/eps_%.2f_tau_%.2f'
+        subfolder_name = folder_name + '/eps_%.2f_tau_%.2f' % (eps, tau)
         pathlib.Path(subfolder_name).mkdir(parents=True, exist_ok=True)
         for z, alg in enumerate(algorithms.keys()):
             print('Epsilon: %.2f, Tau: %.2f, Alg: %s' % (eps, tau, alg))
