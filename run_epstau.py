@@ -23,8 +23,8 @@ def experiment(algorithm, tree, epsilon):
 n_exp = 5
 n_trees = 5
 n_simulations = 10000
-k = 100
-d = 1
+k = 8
+d = 3
 epsilons = [.01, .025, .05, .075, .1, .25, .5, .75, 1.]
 taus = [.01, .025, .05, .075, .1, .25, .5, .75, 1.]
 algorithms = {'uct': 'UCT', 'ments': 'MENTS', 'rents': 'RENTS', 'tents': 'TENTS'}
@@ -36,10 +36,10 @@ diff_uct_heatmap = np.zeros_like(diff_heatmap)
 regret_heatmap = np.zeros_like(diff_heatmap)
 for x, eps in enumerate(epsilons):
     for y, tau in enumerate(taus):
-        subfolder_name = folder_name + '/eps_%.2f_tau_%.2f' % (eps, tau)
+        subfolder_name = folder_name + '/eps_%.3f_tau_%.3f' % (eps, tau)
         pathlib.Path(subfolder_name).mkdir(parents=True, exist_ok=True)
         for z, alg in enumerate(algorithms.keys()):
-            print('Epsilon: %.2f, Tau: %.2f, Alg: %s' % (eps, tau, alg))
+            print('Epsilon: %.3f, Tau: %.3f, Alg: %s' % (eps, tau, alg))
             out = list()
             for w in range(n_trees):
                 try:
