@@ -5,11 +5,13 @@ from scipy.special import logsumexp
 
 
 class SyntheticTree:
-    def __init__(self, k, d, algorithm, tau):
+    def __init__(self, k, d, algorithm, tau, alpha, gamma):
         self._k = k
         self._d = d
         self._algorithm = algorithm
         self._tau = tau
+        self._alpha = alpha
+        self._gamma = gamma
 
         self._tree = nx.balanced_tree(k, d, create_using=nx.DiGraph)
         random_weights = np.random.rand(len(self._tree.edges))
@@ -18,9 +20,18 @@ class SyntheticTree:
             self._tree[e[0]][e[1]]['N'] = 0
             self._tree[e[0]][e[1]]['Q'] = 0.
 
+            if algorithm == "w-mcts":
+                self._tree[e[0]][e[1]]['q_mean'] = 0.
+                self._tree[e[0]][e[1]]['q_variance'] = 0.
+
         for n in self._tree.nodes:
             self._tree.nodes[n]['N'] = 0
             self._tree.nodes[n]['V'] = 0.
+
+            if algorithm == "w-mcts":
+                self._tree.nodes[n]['v_mean'] = 0.
+                self._tree.nodes[n]['v_variance'] = 0.
+
 
         self.leaves = [x for x in self._tree.nodes() if
                        self._tree.out_degree(x) == 0 and self._tree.in_degree(x) == 1]
@@ -58,7 +69,8 @@ class SyntheticTree:
         return self.state
 
     def rollout(self, state):
-        return np.random.normal(self._tree.nodes[state]['mean'], scale=.05)
+        return np.random.normal(self._tree.nodes[state]['mean'], scale=1.)
+        # return np.random.normal(self._tree.nodes[state]['mean'], scale=.05)
 
     @property
     def tree(self):
@@ -88,7 +100,12 @@ class SyntheticTree:
             return means.max()
 
     def _solver(self, node=0):
-        if self._algorithm == 'uct':
+        if self._algorithm == 'w-mcts':
+            successors = [n for n in self._tree.successors(node)]
+            means = np.array([self._tree.nodes[s]['mean'] for s in successors])
+
+            return self.max_mean, means
+        elif self._algorithm == 'uct':
             successors = [n for n in self._tree.successors(node)]
             means = np.array([self._tree.nodes[s]['mean'] for s in successors])
 

@@ -5,15 +5,19 @@ from matplotlib import pyplot as plt
 n_exp = 5
 n_trees = 5
 n_simulations = 10000
-k_heat = [50, 100, 200]  #, 4, 6, 8, 10, 12, 14, 16]
-d_heat = [50, 100, 200]  # [1, 2, 3, 4, 5]
-k = [50, 50, 100, 100, 200, 200]
-d = [1, 2, 1, 2, 1, 2]
+k_heat = [2, 4, 6, 8]  #[50, 100, 200]
+d_heat = [1, 2, 3, 4, 5] # [50, 100, 200]
+# k = [50, 50, 100, 100, 200, 200]
+# d = [1, 2, 1, 2, 1, 2]
+k = [2, 4, 6, 8]
+d = [1, 2, 3, 4, 5]
 exploration_coeff = .1
 tau = .1
-algs = ['uct', 'ments', 'rents', 'tents']
+# algs = ['uct', 'ments', 'rents', 'tents']
 
-folder_name = 'results/kd/expl_%.2f_tau_%.2f' % (exploration_coeff, tau)
+algs = ['uct', 'rents', 'tents', 'w-mcts']
+
+folder_name = 'logs/expl_%.2f_tau_%.2fbk' % (exploration_coeff, tau)
 
 # PLOTS
 plt.figure()
@@ -113,9 +117,9 @@ for t, d in zip(titles_diff, diffs):
         ax.set_xticklabels(d_heat)
         ax.set_yticklabels(k_heat)
         im.set_clim(0, max_d)
-    cb_ax = fig.add_axes([0.7, 0.15, 0.025, 0.7])
-    cbar = fig.colorbar(im, cax=cb_ax)
-    for t in cbar.ax.get_yticklabels():
-        t.set_fontsize('xx-large')
+    # cb_ax = fig.add_axes([0.7, 0.15, 0.025, 0.7])
+    # cbar = fig.colorbar(im, cax=cb_ax)
+    # for t in cbar.ax.get_yticklabels():
+    #     t.set_fontsize('xx-large')
 
 plt.show()
