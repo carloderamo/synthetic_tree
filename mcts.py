@@ -5,11 +5,12 @@ from scipy.stats import norm
 
 
 class MCTS:
-    def __init__(self, exploration_coeff, algorithm, tau, alpha, gamma, update_type):
+    def __init__(self, exploration_coeff, algorithm, tau, alpha, step_size, gamma, update_type):
         self._exploration_coeff = exploration_coeff
         self._algorithm = algorithm
         self._tau = tau
         self._alpha = alpha
+        self._step_size = step_size
         self._gamma = gamma # discount factor
         self._update_type = update_type
 
@@ -65,8 +66,12 @@ class MCTS:
 
         reward = tree_env.rollout(path[-1][1])
 
+        if self._algorithm == "dng":
+            cumulative_reward = 0
+
         leaf_node['V'] = (leaf_node['V'] * leaf_node['N'] + reward) / (leaf_node['N'] + 1)
         leaf_node['N'] += 1
+
         for e in reversed(path):
             current_node = tree_env.tree.nodes[e[0]]
             next_node = tree_env.tree.nodes[e[1]]
@@ -79,12 +84,12 @@ class MCTS:
                 q_variance = tree_env.tree[e[0]][e[1]]['q_variance']
 
                 t = tree_env.tree[e[0]][e[1]]['N']
-                _alpha = 1./np.power(t,0.2)
+                _stepsize = 1./np.power(t,self._step_size)
 
-                tree_env.tree[e[0]][e[1]]['q_mean'] = _alpha * q_mean + \
-                                                      (1 - _alpha) * (reward + self._gamma * q_mean)
-                tree_env.tree[e[0]][e[1]]['q_variance'] = _alpha * q_variance + \
-                                                        (1 - _alpha) * (self._gamma * q_variance)
+                tree_env.tree[e[0]][e[1]]['q_mean'] = _stepsize * q_mean + \
+                                                      (1 - _stepsize) * (reward + self._gamma * q_mean)
+                tree_env.tree[e[0]][e[1]]['q_variance'] = _stepsize * q_variance + \
+                                                        (1 - _stepsize) * (self._gamma * q_variance)
 
                 out_edges = [e for e in tree_env.tree.edges(e[0])]
 
@@ -96,14 +101,23 @@ class MCTS:
 
                 if self._update_type == 'max':
                     best = np.random.choice(np.argwhere(mean_next_all == np.max(mean_next_all)).ravel())
-                    tree_env.tree[e[0]][e[1]]['v_mean'] = mean_next_all[best]
-                    tree_env.tree[e[0]][e[1]]['v_variance'] = variance_next_all[best]
+                    current_node['v_mean'] = mean_next_all[best]
+                    current_node['v_variance'] = variance_next_all[best]
                 else:
                     prob = self._compute_prob_max(mean_next_all, variance_next_all)
 
-                    tree_env.tree[e[0]][e[1]]['v_mean'] = np.sum(mean_next_all * prob)
-                    tree_env.tree[e[0]][e[1]]['v_variance'] = np.sum(variance_next_all * prob)
+                    current_node['v_mean'] = np.sum(mean_next_all * prob)
+                    current_node['v_variance'] = np.sum(variance_next_all * prob)
 
+
+            elif self._algorithm == "dng":
+                cumulative_reward = reward + self._gamma * cumulative_reward
+                current_node["alpha"] += .5
+                current_node["beta"] += .5 * (current_node["lambda"]*(cumulative_reward - current_node["mu"])**2
+                                              / (current_node["lambda"] + 1))
+                current_node["mu"] = ((current_node["lambda"]*current_node["mu"] + cumulative_reward)
+                                      / (current_node["lambda"] + 1))
+                current_node["lambda"] += 1
 
             elif self._algorithm == 'uct':
                 current_node['V'] = (current_node['V'] * current_node['N'] +
@@ -136,6 +150,28 @@ class MCTS:
                     sparse_max = q_tau[kappa] ** 2 / 2 - (q_tau[kappa].sum() - 1) ** 2 / (2 * len(kappa) ** 2)
                     sparse_max = sparse_max.sum() + .5
                     current_node['V'] = self._tau * sparse_max
+                elif self._algorithm == 'alpha-divergence':
+                    q_tau = qs / self._tau
+                    temp_q_tau = q_tau.copy()
+
+                    sorted_q = np.flip(np.sort(temp_q_tau))
+                    kappa = list()
+                    for i in range(1, len(sorted_q) + 1):
+                        if self._alpha + i * sorted_q[i-1] > sorted_q[:i].sum() + i * (self._alpha - (self._alpha/(self._alpha-1))):
+                            idx = np.argwhere(temp_q_tau == sorted_q[i-1]).ravel()[0]
+                            temp_q_tau[idx] = np.nan
+                            kappa.append(idx)
+                    kappa = np.array(kappa)
+                    c_s_tau = ((q_tau[kappa].sum() - self._alpha) / len(kappa)) + (self._alpha - (self._alpha/(self._alpha-1)))
+
+                    max_omega_tmp = np.maximum(q_tau - c_s_tau, np.zeros(len(q_tau)))
+                    max_omega = np.power(max_omega_tmp * ((self._alpha - 1)/self._alpha), 1/(self._alpha))
+                    max_omega = max_omega/np.sum(max_omega)
+
+                    sparse_max_tmp = max_omega * (q_tau + (1/(self._alpha - 1)) * (1 - max_omega_tmp))
+
+                    sparse_max = sparse_max_tmp.sum()
+                    current_node['V'] = self._tau * sparse_max
                 else:
                     raise ValueError
 
@@ -144,6 +180,8 @@ class MCTS:
         v_hat = 0
         if self._algorithm == 'w-mcts':
             v_hat = tree_env.tree.nodes[0]['v_mean']
+        elif self._algorithm == 'dng':
+            v_hat = tree_env.tree.nodes[0]['mu']
         else:
             v_hat = tree_env.tree.nodes[0]['V']
 
@@ -169,24 +207,54 @@ class MCTS:
             [tree_env.tree[e[0]][e[1]]['Q'] for e in out_edges])
 
         if self._algorithm == 'w-mcts':
+            qvalues = []
+            for edge in out_edges:
+                # Sample from normal gamma distribution
+                mu = tree_env.tree[edge[0]][edge[1]]['q_mean']
+                delta = tree_env.tree[edge[0]][edge[1]]['q_variance']
+
+                x = np.random.normal(mu, delta)
+
+                qvalues.append(x)
+            qvalues = np.array(qvalues)
+
+            chosen_action = np.random.choice(np.argwhere(qvalues == np.max(qvalues)).ravel())
+
+            return chosen_action
             ##current implementation is ucb
-            mean_array = np.array(
-                [tree_env.tree[e[0]][e[1]]['q_mean'] for e in out_edges])
+            # mean_array = np.array(
+            #     [tree_env.tree[e[0]][e[1]]['q_mean'] for e in out_edges])
+            #
+            # variance_array = np.array(
+            #     [tree_env.tree[e[0]][e[1]]['q_variance'] for e in out_edges])
+            #
+            # n_state = np.sum(n_state_action)
+            # if n_state > 0:
+            #     ucb_values = mean_array + self._exploration_coeff * np.sqrt(np.log(n_state)) * variance_array
+            # else:
+            #     ucb_values = np.ones(len(n_state_action)) * np.inf
+            #
+            # chosen_action = np.random.choice(np.argwhere(ucb_values == np.max(ucb_values)).ravel())
+            # probs = np.zeros_like(ucb_values)
+            # probs[chosen_action] += 1
+            #
+            # return chosen_action
 
-            variance_array = np.array(
-                [tree_env.tree[e[0]][e[1]]['q_variance'] for e in out_edges])
+        elif self._algorithm == "dng":
+            qvalues = []
+            for edge in out_edges:
+                # Sample from normal gamma distribution
+                mu = tree_env.tree.nodes[edge[1]]["mu"]
+                alpha = tree_env.tree.nodes[edge[1]]["alpha"]
+                beta = tree_env.tree.nodes[edge[1]]["beta"]
 
-            n_state = np.sum(n_state_action)
-            if n_state > 0:
-                ucb_values = mean_array + self._exploration_coeff * np.sqrt(
-                    np.log(n_state) / (n_state_action + 1e-10)
-                ) * variance_array
-            else:
-                ucb_values = np.ones(len(n_state_action)) * np.inf
+                tau = np.random.gamma(alpha, beta)
+                x = np.random.normal(mu, np.sqrt(1/tau))
 
-            chosen_action = np.random.choice(np.argwhere(ucb_values == np.max(ucb_values)).ravel())
-            probs = np.zeros_like(ucb_values)
-            probs[chosen_action] += 1
+                qvalues.append(x)
+            qvalues = np.array(qvalues)
+
+            chosen_action = np.random.choice(np.argwhere(qvalues == np.max(qvalues)).ravel())
 
             return chosen_action
 
@@ -231,6 +299,24 @@ class MCTS:
 
                 max_omega = np.maximum(q_tau - (q_tau[kappa].sum() - 1) / len(kappa),
                                        np.zeros(len(q_tau)))
+                probs = (1 - lambda_coeff) * max_omega + lambda_coeff / n_actions
+            elif self._algorithm == 'alpha-divergence':
+                q_tau = qs / self._tau
+                temp_q_tau = q_tau.copy()
+
+                sorted_q = np.flip(np.sort(temp_q_tau))
+                kappa = list()
+                for i in range(1, len(sorted_q) + 1):
+                    if self._alpha + i * sorted_q[i-1] > sorted_q[:i].sum() + i * (self._alpha - (self._alpha/(self._alpha-1))):
+                        idx = np.argwhere(temp_q_tau == sorted_q[i-1]).ravel()[0]
+                        temp_q_tau[idx] = np.nan
+                        kappa.append(idx)
+                kappa = np.array(kappa)
+                c_s_tau = ((q_tau[kappa].sum() - self._alpha) / len(kappa)) + (self._alpha - (self._alpha/(self._alpha-1)))
+
+                max_omega = np.maximum(q_tau - c_s_tau, np.zeros(len(q_tau)))
+                max_omega = np.power(max_omega * ((self._alpha - 1)/self._alpha), 1/(self._alpha))
+                max_omega = max_omega/np.sum(max_omega)
                 probs = (1 - lambda_coeff) * max_omega + lambda_coeff / n_actions
             else:
                 raise ValueError

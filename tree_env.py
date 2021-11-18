@@ -5,13 +5,14 @@ from scipy.special import logsumexp
 
 
 class SyntheticTree:
-    def __init__(self, k, d, algorithm, tau, alpha, gamma):
+    def __init__(self, k, d, algorithm, tau, alpha, gamma, step_size):
         self._k = k
         self._d = d
         self._algorithm = algorithm
         self._tau = tau
         self._alpha = alpha
         self._gamma = gamma
+        self._step_size = step_size
 
         self._tree = nx.balanced_tree(k, d, create_using=nx.DiGraph)
         random_weights = np.random.rand(len(self._tree.edges))
@@ -22,7 +23,7 @@ class SyntheticTree:
 
             if algorithm == "w-mcts":
                 self._tree[e[0]][e[1]]['q_mean'] = 0.
-                self._tree[e[0]][e[1]]['q_variance'] = 0.
+                self._tree[e[0]][e[1]]['q_variance'] = 1.
 
         for n in self._tree.nodes:
             self._tree.nodes[n]['N'] = 0
@@ -30,7 +31,12 @@ class SyntheticTree:
 
             if algorithm == "w-mcts":
                 self._tree.nodes[n]['v_mean'] = 0.
-                self._tree.nodes[n]['v_variance'] = 0.
+                self._tree.nodes[n]['v_variance'] = 1.
+            elif algorithm == "dng":
+                self._tree.nodes[n]["mu"] = 0.
+                self._tree.nodes[n]["lambda"] = 1e-2
+                self._tree.nodes[n]["alpha"] = 1.
+                self._tree.nodes[n]["beta"] = 100.
 
 
         self.leaves = [x for x in self._tree.nodes() if
@@ -69,7 +75,7 @@ class SyntheticTree:
         return self.state
 
     def rollout(self, state):
-        return np.random.normal(self._tree.nodes[state]['mean'], scale=1.)
+        return np.random.normal(self._tree.nodes[state]['mean'], scale=.5)
         # return np.random.normal(self._tree.nodes[state]['mean'], scale=.05)
 
     @property
@@ -105,6 +111,11 @@ class SyntheticTree:
             means = np.array([self._tree.nodes[s]['mean'] for s in successors])
 
             return self.max_mean, means
+        elif self._algorithm == 'dng':
+            successors = [n for n in self._tree.successors(node)]
+            means = np.array([self._tree.nodes[s]['mean'] for s in successors])
+
+            return self.max_mean, means
         elif self._algorithm == 'uct':
             successors = [n for n in self._tree.successors(node)]
             means = np.array([self._tree.nodes[s]['mean'] for s in successors])
@@ -130,6 +141,38 @@ class SyntheticTree:
                     x = np.array([self._solver(n)[0] for n in self._tree.successors(node)])
 
                     return self._tau * np.log(np.sum(self._tree.nodes[node]['prior'] * np.exp(x / self._tau))), x
+            elif self._algorithm == 'alpha-divergence':
+                def sparse_max_alpha_divergence(means_tau):
+                    temp_means_tau = means_tau.copy()
+                    sorted_means = np.flip(np.sort(temp_means_tau))
+                    kappa = list()
+                    for i in range(1, len(sorted_means) + 1):
+                        if self._alpha + i * sorted_means[i-1] > sorted_means[:i].sum() + i * (self._alpha - (self._alpha/(self._alpha-1))):
+                            idx = np.argwhere(temp_means_tau == sorted_means[i-1]).ravel()[0]
+                            temp_means_tau[idx] = np.nan
+                            kappa.append(idx)
+                    kappa = np.array(kappa)
+
+                    c_s_tau = ((means_tau[kappa].sum() - self._alpha) / len(kappa)) + (self._alpha - (self._alpha/(self._alpha-1)))
+
+                    max_omega_tmp = np.maximum(means_tau - c_s_tau, np.zeros(len(means_tau)))
+                    max_omega = np.power(max_omega_tmp * ((self._alpha - 1)/self._alpha), 1/(self._alpha))
+                    max_omega = max_omega/np.sum(max_omega)
+
+                    sparse_max_tmp = max_omega * (means_tau + (1/(self._alpha - 1)) * (1 - max_omega_tmp))
+
+                    sparse_max = sparse_max_tmp.sum()
+
+                    return sparse_max
+
+                if successors[0] in self.leaves:
+                    x = np.array([self._tree.nodes[n]['mean'] for n in self._tree.successors(node)])
+
+                    return self._tau * sparse_max_alpha_divergence(x / self._tau), x
+                else:
+                    x = np.array([self._solver(n)[0] for n in self._tree.successors(node)])
+
+                    return self._tau * sparse_max_alpha_divergence(np.array(x / self._tau)), x
             elif self._algorithm == 'tents':
                 def sparse_max(means_tau):
                     temp_means_tau = means_tau.copy()

@@ -8,8 +8,10 @@ k = 8
 d = 3
 epsilons_heat = [.01, .025, .05, .075, .1, .25, .5, .75, 1.]
 taus_heat = [.01, .025, .05, .075, .1, .25, .5, .75, 1.]
-epsilons = [.1]
-taus = [.1]
+# epsilons = [.1]
+# taus = [.1]
+epsilons = [.01, .025, .05, .075, .1, .25, .5, .75, 1.]
+taus = [.01, .025, .05, .075, .1, .25, .5, .75, 1.]
 algs = ['uct', 'ments', 'rents', 'tents']
 
 folder_name = 'logs/k_%d_d_%d' % (k, d)
@@ -23,7 +25,7 @@ for eps, tau in zip(epsilons, taus):
     max_diff_uct = 0
     max_regret = 0
     for alg in algs:
-        subfolder_name = folder_name + '/eps_%.1f_tau_%.1f' % (eps, tau)
+        subfolder_name = folder_name + '/eps_%.3f_tau_%.3f' % (eps, tau)
         diff = np.load(subfolder_name + '/diff_%s.npy' % (alg))
         avg_diff = diff.mean(0)
         plt.subplot(3, len(epsilons), 1 + count_plot % len(epsilons))

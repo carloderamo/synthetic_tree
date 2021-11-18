@@ -11,7 +11,10 @@ from tree_env import SyntheticTree
 def experiment(algorithm, tree, epsilon):
     mcts = MCTS(exploration_coeff=epsilon,
                 algorithm=algorithm,
-                tau=tau)
+                tau=tau,
+                alpha=alpha,
+                gamma=gamma,
+                update_type='mean')
 
     v_hat, regret = mcts.run(tree, n_simulations)
     diff = np.abs(v_hat - tree.optimal_v_root)
@@ -31,6 +34,10 @@ algorithms = {'uct': 'UCT', 'ments': 'MENTS', 'rents': 'RENTS', 'tents': 'TENTS'
 
 folder_name = './logs/k_%d_d_%d' % (k, d)
 
+alpha = .2
+gamma = 1.
+update_type = 'mean'
+
 diff_heatmap = np.zeros((len(algorithms), len(epsilons), len(taus)))
 diff_uct_heatmap = np.zeros_like(diff_heatmap)
 regret_heatmap = np.zeros_like(diff_heatmap)
@@ -47,7 +54,7 @@ for x, eps in enumerate(epsilons):
                         tree = pickle.load(f)
                 except FileNotFoundError as err:
                     print('Tree not found! Creating new tree...')
-                    tree = SyntheticTree(k, d, alg, tau)
+                    tree = SyntheticTree(k, d, alg, tau, alpha, gamma)
                     with open(subfolder_name + '/tree%d_%s.pkl' % (w, alg), 'wb') as f:
                         pickle.dump(tree, f)
 

@@ -6,18 +6,18 @@ n_exp = 5
 n_trees = 5
 n_simulations = 10000
 k_heat = [2, 4, 6, 8]  #[50, 100, 200]
-d_heat = [1, 2, 3, 4, 5] # [50, 100, 200]
+d_heat = [1, 2, 3, 4] # [50, 100, 200]
 # k = [50, 50, 100, 100, 200, 200]
 # d = [1, 2, 1, 2, 1, 2]
 k = [2, 4, 6, 8]
-d = [1, 2, 3, 4, 5]
-exploration_coeff = .1
+d = [1, 2, 3, 4]
+exploration_coeff = 1.41
 tau = .1
 # algs = ['uct', 'ments', 'rents', 'tents']
 
-algs = ['uct', 'rents', 'tents', 'w-mcts']
+algs = ['uct', 'tents', 'w-mcts', 'dng']
 
-folder_name = 'logs/expl_%.2f_tau_%.2fbk' % (exploration_coeff, tau)
+folder_name = 'logs/expl_%.2f_tau_%.2f' % (exploration_coeff, tau)
 
 # PLOTS
 plt.figure()
@@ -83,6 +83,8 @@ for kk, dd in zip(k, d):
         plt.xticks([0, 5000, 10000], ['0', '5e3', '10e3'], fontsize='xx-large')
         plt.yticks(fontsize='xx-large')
         plots = [max_diff, max_diff_uct, max_regret]
+
+        # count_plot += 1
 
     for i in range(3):
         plt.subplot(3, len(k), count_plot + 1 + i * len(k))
