@@ -14,6 +14,12 @@ class MCTS:
         self._gamma = gamma # discount factor
         self._update_type = update_type
 
+        if algorithm == 'alpha-divergence' and alpha == 1:
+            self._algorithm = 'ments'
+
+        if algorithm == 'alpha-divergence' and alpha == 2:
+            self._algorithm = 'tents'
+
     def run(self, tree_env, n_simulations):
         v_hat = np.zeros(n_simulations)
         regret = np.zeros_like(v_hat)
@@ -72,6 +78,13 @@ class MCTS:
         leaf_node['V'] = (leaf_node['V'] * leaf_node['N'] + reward) / (leaf_node['N'] + 1)
         leaf_node['N'] += 1
 
+        if self._algorithm == "w-mcts":
+            leaf_node['v_mean'] = (leaf_node['v_mean'] * leaf_node['N'] + reward) / (leaf_node['N'] + 1)
+            if (leaf_node['N'] == 1):
+                leaf_node['v_variance'] = 1.0
+            else:
+                leaf_node['v_variance'] = (leaf_node['v_variance'] * (leaf_node['N'] - 1) + (reward - leaf_node['v_mean'])**2) / leaf_node['N']
+
         for e in reversed(path):
             current_node = tree_env.tree.nodes[e[0]]
             next_node = tree_env.tree.nodes[e[1]]
@@ -82,14 +95,16 @@ class MCTS:
             if self._algorithm == 'w-mcts':
                 q_mean = tree_env.tree[e[0]][e[1]]['q_mean']
                 q_variance = tree_env.tree[e[0]][e[1]]['q_variance']
+                v_mean = next_node['v_mean']
+                v_variance = next_node['v_variance']
 
                 t = tree_env.tree[e[0]][e[1]]['N']
                 _stepsize = 1./np.power(t,self._step_size)
 
                 tree_env.tree[e[0]][e[1]]['q_mean'] = _stepsize * q_mean + \
-                                                      (1 - _stepsize) * (reward + self._gamma * q_mean)
+                                                      (1 - _stepsize) * (reward + self._gamma * v_mean)
                 tree_env.tree[e[0]][e[1]]['q_variance'] = _stepsize * q_variance + \
-                                                        (1 - _stepsize) * (self._gamma * q_variance)
+                                                        (1 - _stepsize) * (self._gamma * v_variance)
 
                 out_edges = [e for e in tree_env.tree.edges(e[0])]
 
@@ -122,6 +137,14 @@ class MCTS:
             elif self._algorithm == 'uct':
                 current_node['V'] = (current_node['V'] * current_node['N'] +
                                      tree_env.tree[e[0]][e[1]]['Q']) / (current_node['N'] + 1)
+
+            elif self._algorithm == 'power-uct':
+                out_edges = [e for e in tree_env.tree.edges(e[0])]
+                n_state_action = np.array(
+                    [tree_env.tree[e[0]][e[1]]['N'] for e in out_edges])
+                qs = np.array(
+                    [tree_env.tree[e[0]][e[1]]['Q'] for e in out_edges])
+                current_node['V'] = np.power(np.sum(n_state_action * np.power(qs,self._alpha)),1/self._alpha)
             else:
                 out_edges = [e for e in tree_env.tree.edges(e[0])]
                 qs = np.array(
@@ -157,18 +180,20 @@ class MCTS:
                     sorted_q = np.flip(np.sort(temp_q_tau))
                     kappa = list()
                     for i in range(1, len(sorted_q) + 1):
-                        if self._alpha + i * sorted_q[i-1] > sorted_q[:i].sum() + i * (self._alpha - (self._alpha/(self._alpha-1))):
+                        if 1 + i * sorted_q[i-1] > sorted_q[:i].sum() + i * (1 - (1/(self._alpha-1))):
                             idx = np.argwhere(temp_q_tau == sorted_q[i-1]).ravel()[0]
                             temp_q_tau[idx] = np.nan
                             kappa.append(idx)
                     kappa = np.array(kappa)
-                    c_s_tau = ((q_tau[kappa].sum() - self._alpha) / len(kappa)) + (self._alpha - (self._alpha/(self._alpha-1)))
+                    c_s_tau = ((q_tau[kappa].sum() - 1) / len(kappa)) + (1 - (1/(self._alpha-1)))
 
-                    max_omega_tmp = np.maximum(q_tau - c_s_tau, np.zeros(len(q_tau)))
-                    max_omega = np.power(max_omega_tmp * ((self._alpha - 1)/self._alpha), 1/(self._alpha))
+                    max_omega = np.maximum(q_tau - c_s_tau, np.zeros(len(q_tau)))
+                    max_omega = np.power(max_omega * (self._alpha - 1), 1/(self._alpha - 1))
                     max_omega = max_omega/np.sum(max_omega)
 
-                    sparse_max_tmp = max_omega * (q_tau + (1/(self._alpha - 1)) * (1 - max_omega_tmp))
+                    # sparse_max_tmp = max_omega * (q_tau + (1/(self._alpha - 1)) * (1 - max_omega_tmp))
+
+                    sparse_max_tmp = max_omega * q_tau
 
                     sparse_max = sparse_max_tmp.sum()
                     current_node['V'] = self._tau * sparse_max
@@ -272,6 +297,20 @@ class MCTS:
             probs[chosen_action] += 1
 
             return chosen_action
+        elif self._algorithm == 'power-uct':
+            n_state = np.sum(n_state_action)
+            if n_state > 0:
+                ucb_values = qs + self._exploration_coeff * np.sqrt(
+                    np.log(n_state) / (n_state_action + 1e-10)
+                )
+            else:
+                ucb_values = np.ones(len(n_state_action)) * np.inf
+
+            chosen_action = np.random.choice(np.argwhere(ucb_values == np.max(ucb_values)).ravel())
+            probs = np.zeros_like(ucb_values)
+            probs[chosen_action] += 1
+
+            return chosen_action
         else:
             n_actions = len(out_edges)
             lambda_coeff = np.clip(self._exploration_coeff * n_actions / np.log(
@@ -307,15 +346,15 @@ class MCTS:
                 sorted_q = np.flip(np.sort(temp_q_tau))
                 kappa = list()
                 for i in range(1, len(sorted_q) + 1):
-                    if self._alpha + i * sorted_q[i-1] > sorted_q[:i].sum() + i * (self._alpha - (self._alpha/(self._alpha-1))):
+                    if 1 + i * sorted_q[i-1] > sorted_q[:i].sum() + i * (1 - (1/(self._alpha-1))):
                         idx = np.argwhere(temp_q_tau == sorted_q[i-1]).ravel()[0]
                         temp_q_tau[idx] = np.nan
                         kappa.append(idx)
                 kappa = np.array(kappa)
-                c_s_tau = ((q_tau[kappa].sum() - self._alpha) / len(kappa)) + (self._alpha - (self._alpha/(self._alpha-1)))
+                c_s_tau = ((q_tau[kappa].sum() - 1) / len(kappa)) + (1 - (1/(self._alpha-1)))
 
                 max_omega = np.maximum(q_tau - c_s_tau, np.zeros(len(q_tau)))
-                max_omega = np.power(max_omega * ((self._alpha - 1)/self._alpha), 1/(self._alpha))
+                max_omega = np.power(max_omega * (self._alpha - 1), 1/(self._alpha - 1))
                 max_omega = max_omega/np.sum(max_omega)
                 probs = (1 - lambda_coeff) * max_omega + lambda_coeff / n_actions
             else:

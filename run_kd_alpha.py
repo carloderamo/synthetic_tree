@@ -28,12 +28,12 @@ n_exp = 5
 n_trees = 5
 n_simulations = 10000
 
-# ks = [2, 4, 6, 8, 10, 12, 14, 16]
-# ds = [1, 2, 3, 4, 5]
+ks = [2, 4, 6, 8, 10, 12, 14, 16]
+ds = [1, 2, 3, 4]
 
-ks = [10, 100, 200]
+# ks = [10, 100, 200]
 
-ds = [3, 4]
+# ds = [1, 2]
 
 # ks = [8]
 # ds = [5]
@@ -46,7 +46,7 @@ step_size = 0.2
 
 # algorithms = {'alpha-divergence': 'ALPHA-1.5', 'tents': 'TENTS', 'alpha-divergence': 'ALPHA-4.0', 'alpha-divergence': 'ALPHA-8.0'}
 algorithms = {'alpha-divergence': 'ALPHA-DIVERGENCE'}
-alphas = [1.5, 2, 4, 8]
+alphas = [1, 1.5, 2, 4, 8, 16]
 
 folder_name = './logs/expl_%.2f_tau_%.2f' % (exploration_coeff, tau)
 

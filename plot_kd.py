@@ -1,5 +1,6 @@
 import numpy as np
-from matplotlib import pyplot as plt
+import matplotlib.pyplot as plt
+plt.rc('text',usetex=False)
 
 
 n_exp = 5
@@ -17,7 +18,7 @@ tau = .1
 
 algs = ['uct', 'tents', 'w-mcts', 'dng']
 
-folder_name = 'logs/expl_%.2f_tau_%.2f' % (exploration_coeff, tau)
+folder_name = 'logs/expl_%.2f_tau_%.2ftmr' % (exploration_coeff, tau)
 
 # PLOTS
 plt.figure()

@@ -1,27 +1,29 @@
 import numpy as np
-from matplotlib import pyplot as plt
+import matplotlib.pyplot as plt
 
 
 n_exp = 5
 n_trees = 5
 n_simulations = 10000
-k_heat = [10, 100, 200]  #[50, 100, 200]
-d_heat = [1, 2] # [50, 100, 200]
+# k_heat = [50, 100, 200]  #[50, 100, 200]
+# d_heat = [1, 2] # [50, 100, 200]
+k_heat = [2, 4, 6, 8, 10, 12, 14, 16]  #[50, 100, 200]
+d_heat = [1, 2, 3, 4] # [50, 100, 200]
 # k = [50, 50, 100, 100, 200, 200]
 # d = [1, 2, 1, 2, 1, 2]
-# k = [2, 4, 6, 8]
-# d = [1, 2, 3, 4, 5]
-k = [10, 100, 200]
-d = [1, 2, 1, 2, 1, 2]
+k = [10, 16, 12, 14, 16]
+d = [1, 2, 3, 3, 4]
+# k = [50, 100, 200, 50, 100, 200]
+# d = [1, 1, 1, 2, 2, 2]
 exploration_coeff = .1
 tau = .1
 # algs = ['uct', 'ments', 'rents', 'tents']
 
 algs = ['alpha-divergence']
 
-algs_legend = ['alpha-divergence-1.5', 'tents', 'alpha-divergence-4.0', 'alpha-divergence-8.0']
+algs_legend = [r"$\alpha$=1.0(MENTS)", r"$\alpha$=1.5", r"$\alpha$=2.0(TENTS)", r"$\alpha$=4.0", r"$\alpha$=8.0", r"$\alpha$=16.0"]
 
-alphas = [1.5, 2, 4, 8]
+alphas = [1, 1.5, 2, 4, 8, 16]
 
 folder_name = 'logs/expl_%.2f_tau_%.2f' % (exploration_coeff, tau)
 
@@ -99,7 +101,7 @@ for kk, dd in zip(k, d):
     count_plot += 1
 
 plt.subplot(3, len(k), 3 * len(k) - 2)
-plt.legend([alg.upper() for alg in algs_legend], fontsize='xx-large', ncol=len(algs_legend), loc=[-1.75, -.8], frameon=False)
+plt.legend([alg for alg in algs_legend], fontsize='xx-large', loc="upper center", bbox_to_anchor=(0.3, -0.3), ncol=len(algs_legend), frameon=False)
 
 # HEATMAPS
 diff = np.load(folder_name + '/diff_heatmap.npy')
@@ -109,12 +111,12 @@ regret = np.load(folder_name + '/regret_heatmap.npy')
 diffs = [diff, diff_uct, regret]
 titles_diff = [r'$\varepsilon_\Omega$', r'$\varepsilon_{UCT}$', 'R']
 for t, d in zip(titles_diff, diffs):
-    fig, axs = plt.subplots(nrows=2, ncols=2)
+    fig, axs = plt.subplots(nrows=3, ncols=2)
     fig.suptitle(t, fontsize='xx-large')
     max_d = d.max()
     for i, ax in enumerate(axs.flat):
         im = ax.imshow(d[i], cmap=plt.get_cmap('inferno'))
-        ax.set_title(algs_legend[i].upper(), fontsize='xx-large')
+        ax.set_title(algs_legend[i], fontsize='xx-large')
         ax.set_xticks(np.arange(len(d_heat)))
         for tick in ax.xaxis.get_major_ticks():
             tick.label.set_fontsize('xx-large')
@@ -124,9 +126,9 @@ for t, d in zip(titles_diff, diffs):
         ax.set_xticklabels(d_heat)
         ax.set_yticklabels(k_heat)
         im.set_clim(0, max_d)
-    # cb_ax = fig.add_axes([0.7, 0.15, 0.025, 0.7])
-    # cbar = fig.colorbar(im, cax=cb_ax)
-    # for t in cbar.ax.get_yticklabels():
-    #     t.set_fontsize('xx-large')
+    cb_ax = fig.add_axes([.7, .15, .015, .6])
+    cbar = fig.colorbar(im, cax=cb_ax)
+    for t in cbar.ax.get_yticklabels():
+        t.set_fontsize('xx-large')
 
 plt.show()

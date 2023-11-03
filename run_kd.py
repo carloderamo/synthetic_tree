@@ -8,7 +8,7 @@ from mcts import MCTS
 from tree_env import SyntheticTree
 
 
-def experiment(algorithm, tree):
+def experiment(algorithm, tree, alpha):
     mcts = MCTS(exploration_coeff=exploration_coeff,
                 algorithm=algorithm,
                 tau=tau,
@@ -29,18 +29,25 @@ n_trees = 5
 n_simulations = 10000
 # n_simulations = 1000
 # ks = [2, 4, 6, 8, 10, 12, 14, 16]
-ks = [2, 4, 6, 8]
-ds = [1, 2, 3, 4]
+# ds = [1, 2, 3, 4, 5]
+ks = [2]
+ds = [1, 2]
 
 # ks = [8]
 # ds = [5]
 
-exploration_coeff = 1.41
+exploration_coeff = .1
 tau = .1
 alpha = .5
+# alphas = [2,3,4] #power constant
 gamma = 1.
-step_size = 0.2
-algorithms = {'uct': 'UCT', 'tents': 'TENTS', 'w-mcts': 'W-MCTS', 'dng': 'DNG'}
+step_size = 0.1
+# algorithms = {'uct': 'UCT', 'tents': 'TENTS', 'w-mcts': 'W-MCTS', 'dng': 'DNG'}
+
+algorithms = {'uct': 'UCT', 'ments': 'MENTS', 'rents': 'RENTS', 'tents': 'TENTS'}
+
+# algorithms = {'power-uct-2': 'Power-UCT,p=2', 'power-uct-3': 'Power-UCT,p=3',
+#               'power-uct-4': 'Power-UCT,p=4'}
 
 # algorithms = {'alpha-divergence': 'ALPHA', 'tents': 'TENTS'}
 # algorithms = {'w-mcts': 'W-MCTS'}
@@ -67,7 +74,7 @@ for x, k in enumerate(ks):
                     with open(subfolder_name + '/tree%d_%s.pkl' % (w, alg), 'wb') as f:
                         pickle.dump(tree, f)
 
-                out += Parallel(n_jobs=-1)(delayed(experiment)(alg, tree) for _ in range(n_exp))
+                out += Parallel(n_jobs=-1)(delayed(experiment)(alg, tree, alpha) for _ in range(n_exp))
             out = np.array(out)
 
             diff = out[:, 0]

@@ -14,6 +14,12 @@ class SyntheticTree:
         self._gamma = gamma
         self._step_size = step_size
 
+        if algorithm == 'alpha-divergence' and alpha == 1:
+            self._algorithm = 'ments'
+
+        if algorithm == 'alpha-divergence' and alpha == 2:
+            self._algorithm = 'tents'
+
         self._tree = nx.balanced_tree(k, d, create_using=nx.DiGraph)
         random_weights = np.random.rand(len(self._tree.edges))
         for i, e in enumerate(self._tree.edges):
@@ -23,7 +29,7 @@ class SyntheticTree:
 
             if algorithm == "w-mcts":
                 self._tree[e[0]][e[1]]['q_mean'] = 0.
-                self._tree[e[0]][e[1]]['q_variance'] = 1.
+                self._tree[e[0]][e[1]]['q_variance'] = 0.
 
         for n in self._tree.nodes:
             self._tree.nodes[n]['N'] = 0
@@ -31,7 +37,7 @@ class SyntheticTree:
 
             if algorithm == "w-mcts":
                 self._tree.nodes[n]['v_mean'] = 0.
-                self._tree.nodes[n]['v_variance'] = 1.
+                self._tree.nodes[n]['v_variance'] = 0.
             elif algorithm == "dng":
                 self._tree.nodes[n]["mu"] = 0.
                 self._tree.nodes[n]["lambda"] = 1e-2
@@ -75,8 +81,8 @@ class SyntheticTree:
         return self.state
 
     def rollout(self, state):
-        return np.random.normal(self._tree.nodes[state]['mean'], scale=.5)
-        # return np.random.normal(self._tree.nodes[state]['mean'], scale=.05)
+        # return np.random.normal(self._tree.nodes[state]['mean'], scale=.5)
+        return np.random.normal(self._tree.nodes[state]['mean'], scale=.05)
 
     @property
     def tree(self):
@@ -121,6 +127,15 @@ class SyntheticTree:
             means = np.array([self._tree.nodes[s]['mean'] for s in successors])
 
             return self.max_mean, means
+        elif self._algorithm == 'power-uct':
+            successors = [n for n in self._tree.successors(node)]
+            means = np.array([self._tree.nodes[s]['mean'] for s in successors])
+
+            n_state_action = np.array([self._tree.nodes[s]['N'] for s in successors])
+
+            self.max_mean = np.power(np.sum(np.power(n_state_action*means, self._alpha)), self._alpha)
+
+            return self.max_mean, means
         else:
             successors = [n for n in self._tree.successors(node)]
             if self._algorithm == 'ments':
@@ -147,19 +162,20 @@ class SyntheticTree:
                     sorted_means = np.flip(np.sort(temp_means_tau))
                     kappa = list()
                     for i in range(1, len(sorted_means) + 1):
-                        if self._alpha + i * sorted_means[i-1] > sorted_means[:i].sum() + i * (self._alpha - (self._alpha/(self._alpha-1))):
+                        if 1 + i * sorted_means[i-1] > sorted_means[:i].sum() + i * (1 - (1/(self._alpha-1))):
                             idx = np.argwhere(temp_means_tau == sorted_means[i-1]).ravel()[0]
                             temp_means_tau[idx] = np.nan
                             kappa.append(idx)
                     kappa = np.array(kappa)
 
-                    c_s_tau = ((means_tau[kappa].sum() - self._alpha) / len(kappa)) + (self._alpha - (self._alpha/(self._alpha-1)))
+                    c_s_tau = ((means_tau[kappa].sum() - 1) / len(kappa)) + (1 - (1/(self._alpha-1)))
 
                     max_omega_tmp = np.maximum(means_tau - c_s_tau, np.zeros(len(means_tau)))
-                    max_omega = np.power(max_omega_tmp * ((self._alpha - 1)/self._alpha), 1/(self._alpha))
+                    max_omega = np.power(max_omega_tmp * (self._alpha - 1), 1/(self._alpha-1))
                     max_omega = max_omega/np.sum(max_omega)
 
-                    sparse_max_tmp = max_omega * (means_tau + (1/(self._alpha - 1)) * (1 - max_omega_tmp))
+                    # sparse_max_tmp = max_omega * (means_tau + (1/(self._alpha - 1)) * (1 - max_omega_tmp))
+                    sparse_max_tmp = max_omega * means_tau
 
                     sparse_max = sparse_max_tmp.sum()
 
