@@ -144,7 +144,7 @@ class MCTS:
                     [tree_env.tree[e[0]][e[1]]['N'] for e in out_edges])
                 qs = np.array(
                     [tree_env.tree[e[0]][e[1]]['Q'] for e in out_edges])
-                current_node['V'] = np.power(np.sum(n_state_action * np.power(qs,self._alpha)),1/self._alpha)
+                current_node['V'] = np.power(np.mean(n_state_action * np.power(qs,self._alpha)),1.0/self._alpha)
             else:
                 out_edges = [e for e in tree_env.tree.edges(e[0])]
                 qs = np.array(
@@ -304,7 +304,7 @@ class MCTS:
                     np.log(n_state) / (n_state_action + 1e-10)
                 )
             else:
-                ucb_values = np.ones(len(n_state_action)) * np.inf
+                ucb_values = np.ones(len(n_state_action)) * 1e6
 
             chosen_action = np.random.choice(np.argwhere(ucb_values == np.max(ucb_values)).ravel())
             probs = np.zeros_like(ucb_values)

@@ -133,7 +133,7 @@ class SyntheticTree:
 
             n_state_action = np.array([self._tree.nodes[s]['N'] for s in successors])
 
-            self.max_mean = np.power(np.sum(np.power(n_state_action*means, self._alpha)), self._alpha)
+            self.max_mean = np.power(np.mean(n_state_action*np.power(means, self._alpha)), 1.0/self._alpha)
 
             return self.max_mean, means
         else:
